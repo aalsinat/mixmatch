@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://iberia.com/wsdl/htr/voucherService" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s1="http://iberia.com/schema/drc/customerservice/tVoucher" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://iberia.com/wsdl/htr/voucherService" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+    <wsdl:types>
+        <s:schema elementFormDefault="qualified" targetNamespace="http://iberia.com/wsdl/htr/voucherService">
+            <s:import namespace="http://iberia.com/schema/drc/customerservice/tVoucher" />
+            <s:element name="Login">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="user" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="pwd" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="LoginResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="LoginResult" type="tns:AuthenticationResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="AuthenticationResponse">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" name="tkn" type="s:string" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:element name="Logoff">
+                <s:complexType />
+            </s:element>
+            <s:element name="LogoffResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="LogoffResult" type="tns:AuthenticationResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetEstabsList">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="1" maxOccurs="1" name="idProv" type="s:int" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetEstabsListResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="GetEstabsListResult" type="tns:Establishments" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="Establishments">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" name="estabs" type="tns:ArrayOfEstablishment" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:complexType name="ArrayOfEstablishment">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="unbounded" name="estab" nillable="true" type="tns:Establishment" />
+                </s:sequence>
+            </s:complexType>
+            <s:complexType name="Establishment">
+                <s:sequence>
+                    <s:element minOccurs="1" maxOccurs="1" name="id" nillable="true" type="s:int" />
+                    <s:element minOccurs="1" maxOccurs="1" name="id_prov" type="s:int" />
+                    <s:element minOccurs="0" maxOccurs="1" name="name" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="address" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="city" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="phone" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="mail" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="nif" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="zone" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="nombre_descr" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="descr" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="area" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="type" type="s:string" />
+                </s:sequence>
+            </s:complexType>
+            <s:element name="AddEstab">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="estab" type="tns:Establishment" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="AddEstabResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="AddEstabResult" type="tns:EstablishmentResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="EstablishmentResponse">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" name="establishment" type="tns:Establishment" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:element name="DeleteEstab">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="1" maxOccurs="1" name="idEstab" type="s:int" />
+                        <s:element minOccurs="1" maxOccurs="1" name="idProv" type="s:int" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="DeleteEstabResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="DeleteEstabResult" type="tns:BoolResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="BoolResponse">
+                <s:sequence>
+                    <s:element minOccurs="1" maxOccurs="1" name="res" type="s:boolean" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:element name="ModifyEstab">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="estab" type="tns:Establishment" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="ModifyEstabResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="ModifyEstabResult" type="tns:EstablishmentResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetSvcList">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="idProv" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetSvcListResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="GetSvcListResult" type="tns:Services" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="Services">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" name="svcs" type="tns:ArrayOfService" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:complexType name="ArrayOfService">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="unbounded" name="svc" nillable="true" type="tns:Service" />
+                </s:sequence>
+            </s:complexType>
+            <s:complexType name="Service">
+                <s:sequence>
+                    <s:element minOccurs="1" maxOccurs="1" name="id" type="s:int" />
+                    <s:element minOccurs="1" maxOccurs="1" name="max" type="s:int" />
+                    <s:element minOccurs="0" maxOccurs="1" name="name" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="provider_name" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="description" type="s:string" />
+                </s:sequence>
+            </s:complexType>
+            <s:element name="UpdVoucher">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="1" maxOccurs="1" name="idVoucher" type="s:int" />
+                        <s:element minOccurs="0" maxOccurs="1" name="idStatus" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="idEstab" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="csDate" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="idClosed" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="outDate" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="UpdVoucherResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="UpdVoucherResult" type="s1:UpdateVoucherResponse" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetVoucherAvailability">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="data" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="type" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="airport" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="idProvider" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="idSvc" type="s:string" />
+                        <s:element minOccurs="0" maxOccurs="1" name="csdate" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="GetVoucherAvailabilityResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="GetVoucherAvailabilityResult" type="tns:Vouchers" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:complexType name="Vouchers">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" name="vouchers" type="tns:ArrayOfVoucher" />
+                    <s:element minOccurs="0" maxOccurs="1" name="nbre" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="tkt" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="ff" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="pnr" type="s:string" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+            <s:complexType name="ArrayOfVoucher">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="unbounded" name="voucher" nillable="true" type="tns:Voucher" />
+                </s:sequence>
+            </s:complexType>
+            <s:complexType name="Voucher">
+                <s:sequence>
+                    <s:element minOccurs="1" maxOccurs="1" name="id" type="s:int" />
+                    <s:element minOccurs="0" maxOccurs="1" name="status" type="s:string" />
+                    <s:element minOccurs="1" maxOccurs="1" name="id_svc" type="s:int" />
+                    <s:element minOccurs="0" maxOccurs="1" name="nbre_svc" type="s:string" />
+                    <s:element minOccurs="0" maxOccurs="1" name="outdate" type="s:string" />
+                </s:sequence>
+            </s:complexType>
+        </s:schema>
+        <s:schema elementFormDefault="qualified" targetNamespace="http://iberia.com/schema/drc/customerservice/tVoucher">
+            <s:complexType name="UpdateVoucherResponse">
+                <s:sequence>
+                    <s:element minOccurs="0" maxOccurs="1" form="unqualified" name="outDate" type="s:string" />
+                </s:sequence>
+                <s:attribute name="code" type="s:string" />
+            </s:complexType>
+        </s:schema>
+    </wsdl:types>
+    <wsdl:message name="LoginSoapIn">
+        <wsdl:part name="parameters" element="tns:Login" />
+    </wsdl:message>
+    <wsdl:message name="LoginSoapOut">
+        <wsdl:part name="parameters" element="tns:LoginResponse" />
+    </wsdl:message>
+    <wsdl:message name="LogoffSoapIn">
+        <wsdl:part name="parameters" element="tns:Logoff" />
+    </wsdl:message>
+    <wsdl:message name="LogoffSoapOut">
+        <wsdl:part name="parameters" element="tns:LogoffResponse" />
+    </wsdl:message>
+    <wsdl:message name="GetEstabsListSoapIn">
+        <wsdl:part name="parameters" element="tns:GetEstabsList" />
+    </wsdl:message>
+    <wsdl:message name="GetEstabsListSoapOut">
+        <wsdl:part name="parameters" element="tns:GetEstabsListResponse" />
+    </wsdl:message>
+    <wsdl:message name="AddEstabSoapIn">
+        <wsdl:part name="parameters" element="tns:AddEstab" />
+    </wsdl:message>
+    <wsdl:message name="AddEstabSoapOut">
+        <wsdl:part name="parameters" element="tns:AddEstabResponse" />
+    </wsdl:message>
+    <wsdl:message name="DeleteEstabSoapIn">
+        <wsdl:part name="parameters" element="tns:DeleteEstab" />
+    </wsdl:message>
+    <wsdl:message name="DeleteEstabSoapOut">
+        <wsdl:part name="parameters" element="tns:DeleteEstabResponse" />
+    </wsdl:message>
+    <wsdl:message name="ModifyEstabSoapIn">
+        <wsdl:part name="parameters" element="tns:ModifyEstab" />
+    </wsdl:message>
+    <wsdl:message name="ModifyEstabSoapOut">
+        <wsdl:part name="parameters" element="tns:ModifyEstabResponse" />
+    </wsdl:message>
+    <wsdl:message name="GetSvcListSoapIn">
+        <wsdl:part name="parameters" element="tns:GetSvcList" />
+    </wsdl:message>
+    <wsdl:message name="GetSvcListSoapOut">
+        <wsdl:part name="parameters" element="tns:GetSvcListResponse" />
+    </wsdl:message>
+    <wsdl:message name="UpdVoucherSoapIn">
+        <wsdl:part name="parameters" element="tns:UpdVoucher" />
+    </wsdl:message>
+    <wsdl:message name="UpdVoucherSoapOut">
+        <wsdl:part name="parameters" element="tns:UpdVoucherResponse" />
+    </wsdl:message>
+    <wsdl:message name="GetVoucherAvailabilitySoapIn">
+        <wsdl:part name="parameters" element="tns:GetVoucherAvailability" />
+    </wsdl:message>
+    <wsdl:message name="GetVoucherAvailabilitySoapOut">
+        <wsdl:part name="parameters" element="tns:GetVoucherAvailabilityResponse" />
+    </wsdl:message>
+    <wsdl:portType name="HtrVoucherSoap">
+        <wsdl:operation name="Login">
+            <wsdl:input message="tns:LoginSoapIn" />
+            <wsdl:output message="tns:LoginSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="Logoff">
+            <wsdl:input message="tns:LogoffSoapIn" />
+            <wsdl:output message="tns:LogoffSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="GetEstabsList">
+            <wsdl:input message="tns:GetEstabsListSoapIn" />
+            <wsdl:output message="tns:GetEstabsListSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="AddEstab">
+            <wsdl:input message="tns:AddEstabSoapIn" />
+            <wsdl:output message="tns:AddEstabSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="DeleteEstab">
+            <wsdl:input message="tns:DeleteEstabSoapIn" />
+            <wsdl:output message="tns:DeleteEstabSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="ModifyEstab">
+            <wsdl:input message="tns:ModifyEstabSoapIn" />
+            <wsdl:output message="tns:ModifyEstabSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="GetSvcList">
+            <wsdl:input message="tns:GetSvcListSoapIn" />
+            <wsdl:output message="tns:GetSvcListSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="UpdVoucher">
+            <wsdl:input message="tns:UpdVoucherSoapIn" />
+            <wsdl:output message="tns:UpdVoucherSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="GetVoucherAvailability">
+            <wsdl:input message="tns:GetVoucherAvailabilitySoapIn" />
+            <wsdl:output message="tns:GetVoucherAvailabilitySoapOut" />
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="HtrVoucherSoap" type="tns:HtrVoucherSoap">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+        <wsdl:operation name="Login">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/Login" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Logoff">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/Logoff" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetEstabsList">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetEstabsList" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AddEstab">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/AddEstab" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="DeleteEstab">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/DeleteEstab" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ModifyEstab">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/ModifyEstab" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetSvcList">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetSvcList" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="UpdVoucher">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/UpdVoucher" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetVoucherAvailability">
+            <soap:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetVoucherAvailability" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="HtrVoucherSoap12" type="tns:HtrVoucherSoap">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+        <wsdl:operation name="Login">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/Login" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Logoff">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/Logoff" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetEstabsList">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetEstabsList" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AddEstab">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/AddEstab" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="DeleteEstab">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/DeleteEstab" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ModifyEstab">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/ModifyEstab" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetSvcList">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetSvcList" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="UpdVoucher">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/UpdVoucher" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetVoucherAvailability">
+            <soap12:operation soapAction="http://iberia.com/wsdl/htr/voucherService/GetVoucherAvailability" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="HtrVoucher">
+        <wsdl:port name="HtrVoucherSoap" binding="tns:HtrVoucherSoap">
+            <soap:address location="https://htrserviciostest.corp.iberia.es:443/ws_htrvoucher/htrvoucher.asmx" />
+        </wsdl:port>
+        <wsdl:port name="HtrVoucherSoap12" binding="tns:HtrVoucherSoap12">
+            <soap12:address location="https://htrserviciostest.corp.iberia.es:443/ws_htrvoucher/htrvoucher.asmx" />
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<validarmixmatch>
+   <bd>
+      <server>.</server>
+      <database>DBFREST2</database>
+      <user>ICGAdmin</user>
+      <CodTPV>TPV30522</CodTPV>
+   </bd>
+   <codvendedor>76</codvendedor>
+   <idpromocion>3105</idpromocion>
+   <identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXBCNLAXTA 1234 296YXXXX0015 X00</identificador>
+   <aplicarmm>0</aplicarmm>
+   <estadomm></estadomm>
+</validarmixmatch>

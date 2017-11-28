@@ -1,0 +1,86 @@
+[
+  {
+    "couponRef": "ICP1234570",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€10 VOUCHER",
+    "value": 10.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T13:17:53.903",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234571",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€5 VOUCHER",
+    "value": 5.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234572",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€15 VOUCHER",
+    "value": 15.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234573",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€25 VOUCHER",
+    "value": 25.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234574",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€1 VOUCHER",
+    "value": 1.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234575",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€2 VOUCHER",
+    "value": 2.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  },
+  {
+    "couponRef": "ICP1234576",
+    "redeemed": false,
+    "expired": false,
+    "couponTypeName": "€3 VOUCHER",
+    "value": 3.0000,
+    "currencyCode": "EUR",
+    "currencySymbol": "€",
+    "statusChangedDate": "2017-08-21T15:15:25.450",
+    "objectRef": "123",
+    "type": 2
+  }
+]
