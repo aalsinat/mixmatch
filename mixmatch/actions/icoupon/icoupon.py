@@ -1,28 +1,33 @@
 import json
 import logging
-import os
 import sys
 
+import os
 import wx
 
-from mixmatch.actions import Action
+from mixmatch.actions import IApplicable
 from mixmatch.conf import BASE_DIR
 from .api import RestClient, Coupon
+from mixmatch.core.icg import ICGExtend
 
 # Constants for returning status on view showing coupon list
 VIEW_REDEEM = 'REDEEM'
 VIEW_CANCEL = 'CANCEL'
 VIEW_EXIT = 'EXIT'
+ACTION_NAME = 'icoupon'
 
 
-class ICoupon(Action):
-    def __init__(self, constructor=()):
-        super(ICoupon, self).__init__(constructor)
+class Action(IApplicable):
+    def __init__(self, iterable=(), **properties):
+        super(Action, self).__init__(iterable, **properties)
         self.current_coupons_list = self._retrieve_stored_info()
 
-    def show_coupons(self, barcode, icg_extend):
+    def get_name(self):
+        return ACTION_NAME
+
+    def apply(self, icg_extend):
         self.logger.info('Showing coupons list')
-        coupons_list = self._get_coupons(barcode)
+        coupons_list = self._get_coupons(icg_extend.get_barcode())
         coupons_list = self._get_mocking_coupons()
 
         if len(coupons_list) > 0:
@@ -79,20 +84,20 @@ class ICoupon(Action):
 
     def _get_client(self):
         return RestClient({
-            'grant_type': self.properties.get('token.grant_type'),
-            'client_id': self.properties.get('token.client_id'),
-            'client_secret': self.properties.get('token.client_secret'),
-            'base_url': self.properties.get('ws.base.url'),
-            'login_url': self.properties.get('ws.token.url'),
-            'coupons_url': self.properties.get('ws.coupons.list.url'),
-            'location': self.properties.get('location.ref'),
-            'service_provider': self.properties.get('service.provider.ref'),
-            'trading_outlet': self.properties.get('trading.outlet.ref')
+            'grant_type': self['token.grant_type'],
+            'client_id': self['token.client_id'],
+            'client_secret': self['token.client_secret'],
+            'base_url': self['ws.base.url'],
+            'login_url': self['ws.token.url'],
+            'coupons_url': self['ws.coupons.list.url'],
+            'location': self['location.ref'],
+            'service_provider': self['service.provider.ref'],
+            'trading_outlet': self['trading.outlet.ref']
         })
 
     def _retrieve_stored_info(self):
         saved_coupons_file = os.path.abspath(
-            os.path.join(BASE_DIR, self.properties.get('store.path'), self.properties.get('store.filename')))
+            os.path.join(BASE_DIR, self['store.path'], self['store.filename']))
         if os.path.isfile(saved_coupons_file):
             with open(saved_coupons_file) as saved_coupons:
                 return map(lambda c: Coupon(c), json.load(saved_coupons))
@@ -299,7 +304,7 @@ class CouponsView(wx.Frame):
         print 'Relative path: %s' % relative_path
         print 'Resource path for wxPython: %s' % temp
         return temp
-        #return os.path.join(os.path.abspath("."), relative_path)
+        # return os.path.join(os.path.abspath("."), relative_path)
 
     def __del__(self):
         pass

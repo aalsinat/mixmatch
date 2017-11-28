@@ -1,22 +1,26 @@
+import logging
+
 from zeep import Client
 
+from mixmatch.actions import IApplicable
 
-class IberiaRequest(object):
-    def __init__(self, constructor=()):
+ACTION_NAME = 'iberia'
+
+
+class Action(IApplicable):
+    def __init__(self, iterable=(), **properties):
+        super(Action, self).__init__(iterable, **properties)
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.values = list(constructor)
-        self.properties = dict(self.values)
 
-    @classmethod
-    def from_values(cls, *args):
-        return cls(args)
+    def get_name(self):
+        return ACTION_NAME
 
-    @classmethod
-    def from_list(cls, properties_list):
-        return cls(properties_list)
+    def apply(self, identifier, icg_extend):
+        self.logger.info('By now doing nothing')
+        pass
 
     def get_token(self):
-        client = Client(self.properties.get('ws.base.url.test'))
-        credentials = {'user': self.properties.get('ws.user'),
-                       'pwd': self.properties.get('ws.pwd')}
+        client = Client(self['ws.base.url.test'])
+        credentials = {'user': self['ws.user'],
+                       'pwd': self['ws.pwd']}
         return client.service.Login(credentials)

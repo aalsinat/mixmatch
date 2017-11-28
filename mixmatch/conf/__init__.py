@@ -52,6 +52,8 @@ class LazySettings(LazyObject):
         self.__dict__[name] = val
         return val
 
+    __getitem__ = __getattr__
+
     def __setattr__(self, name, value):
         """
         Set the value of setting. Clear all cached values if _wrapped changes
