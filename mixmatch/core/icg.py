@@ -54,6 +54,12 @@ class ICGExtend(object):
         mix_and_match.text = self.properties.get('manager.promotion.id')
         self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
 
+    def set_mix_and_match_value(self,value):
+        icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
+        mix_and_match = self.root.find('aplicarmm')
+        mix_and_match.text = value
+        self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
+
     def cancel_mix_and_match(self):
         icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('aplicarmm')

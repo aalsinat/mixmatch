@@ -23,7 +23,6 @@ class Promotion(object):
         for action in actions_list:
             action_module = importlib.import_module(''.join(['mixmatch.actions.', action]))
             self._actions.append(action_module.Action(settings[action]))
-        print(self._actions)
 
     def apply(self, icg_extend):
         """
