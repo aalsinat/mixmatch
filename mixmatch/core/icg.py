@@ -1,8 +1,8 @@
-import json
 import logging
 import os
-import pypyodbc
 from xml.etree import ElementTree
+
+import pypyodbc
 
 
 class ICGExtend(object):
@@ -52,25 +52,25 @@ class ICGExtend(object):
         icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('aplicarmm')
         mix_and_match.text = self.properties.get('manager.promotion.id')
-        self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
+        self.element_tree.write(os.path.abspath(icg_file))
 
-    def set_mix_and_match_value(self,value):
+    def set_mix_and_match_value(self, value):
         icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('aplicarmm')
         mix_and_match.text = value
-        self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
+        self.element_tree.write(os.path.abspath(icg_file))
 
     def cancel_mix_and_match(self):
         icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('aplicarmm')
         mix_and_match.text = '0'
-        self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
+        self.element_tree.write(os.path.abspath(icg_file))
 
     def set_mix_and_match_status(self, message):
         icg_file = os.path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('estadomm')
         mix_and_match.text = message
-        self.element_tree.write(open(os.path.abspath(icg_file), 'w'), encoding='utf-8')
+        self.element_tree.write(os.path.abspath(icg_file))
 
     def update_db_promotion(self, new_value):
         select_sql = r'SELECT VALOR FROM ACCIONESPROMOCION WHERE IDPROMOCION = ?'

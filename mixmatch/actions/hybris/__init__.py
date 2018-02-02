@@ -1,3 +1,3 @@
-from hybris import Action, Coupon
+from .hybris import Action
 
 __all__ = ['Action']

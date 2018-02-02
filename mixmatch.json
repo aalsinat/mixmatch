@@ -1,25 +1,25 @@
 [{
-  "objectRef": "123",
-  "redeemed": false,
-  "couponRef": "ICP1234572",
-  "expired": false,
-  "currencyCode": "EUR",
   "selected": true,
-  "value": 15.0,
-  "couponTypeName": "\u20ac15 VOUCHER",
+  "couponRef": "ICP1234575",
+  "redeemed": false,
+  "expired": false,
+  "couponTypeName": "\u20ac2 VOUCHER",
+  "value": 2.0,
+  "currencyCode": "EUR",
   "currencySymbol": "\u20ac",
-  "type": 2,
-  "statusChangedDate": "2017-08-21T15:15:25.450"
+  "statusChangedDate": "2017-08-21T15:15:25.450",
+  "objectRef": "123",
+  "type": 2
 }, {
-  "objectRef": "123",
-  "redeemed": false,
-  "couponRef": "ICP1234574",
-  "expired": false,
-  "currencyCode": "EUR",
   "selected": true,
-  "value": 1.0,
-  "couponTypeName": "\u20ac1 VOUCHER",
+  "couponRef": "ICP1234573",
+  "redeemed": false,
+  "expired": false,
+  "couponTypeName": "\u20ac25 VOUCHER",
+  "value": 25.0,
+  "currencyCode": "EUR",
   "currencySymbol": "\u20ac",
-  "type": 2,
-  "statusChangedDate": "2017-08-21T15:15:25.450"
+  "statusChangedDate": "2017-08-21T15:15:25.450",
+  "objectRef": "123",
+  "type": 2
 }]

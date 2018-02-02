@@ -58,7 +58,7 @@ class RestClient(object):
                                                               url=''.join([self.base_url,
                                                                            self.login_url]),
                                                               fields=body,
-                                                              encode_multipart=False)
+                                                              encode_multipart=False, timeout=3, retries=False)
         if token_response.status == 200:
             return token_response.status, json.loads(token_response.data.decode('utf-8'))['access_token']
         else:
@@ -78,7 +78,7 @@ class RestClient(object):
             encoded_data = json.dumps(data).encode('utf-8')
             coupons_list = self.http_client.request('POST', ''.join(
                 [self.base_url, self.coupons_url]), body=encoded_data,
-                                                    headers=headers)
+                                                    headers=headers, timeout=3, retries=False)
             if coupons_list.status == 200:
                 coupons = map(lambda c: Coupon(c), json.loads(coupons_list.data.decode('utf-8'))['coupons'])
                 return coupons_list.status, coupons

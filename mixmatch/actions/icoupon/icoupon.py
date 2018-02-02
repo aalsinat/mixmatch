@@ -14,7 +14,7 @@ from mixmatch.core.icg import ICGExtend
 VIEW_REDEEM = 'REDEEM'
 VIEW_CANCEL = 'CANCEL'
 VIEW_EXIT = 'EXIT'
-ACTION_NAME = 'icoupon'
+ACTION_NAME = 'ICOUPON'
 
 
 class Action(IApplicable):
@@ -28,7 +28,7 @@ class Action(IApplicable):
     def apply(self, icg_extend):
         self.logger.info('Showing coupons list')
         coupons_list = self._get_coupons(icg_extend.get_barcode())
-        coupons_list = self._get_mocking_coupons()
+        # coupons_list = self._get_mocking_coupons()
 
         if len(coupons_list) > 0:
             self.logger.info('Coupons list length is %d', len(coupons_list))
@@ -47,9 +47,9 @@ class Action(IApplicable):
                     self.logger.info('New selected list: %s', selected_list)
                     icg_extend.save_coupon(selected_list)
                     # 3. Update database
-                    value = sum(coupon.value for coupon in selected_list)
-                    self.logger.info('New value for coupons list %s', value)
-                    icg_extend.update_db_promotion(value)
+                    # value = sum(coupon.value for coupon in selected_list)
+                    # self.logger.info('New value for coupons list %s', value)
+                    # icg_extend.update_db_promotion(value)
                 else:
                     icg_extend.cancel_mix_and_match()
                     icg_extend.update_db_promotion(0.0)
@@ -99,8 +99,10 @@ class Action(IApplicable):
         saved_coupons_file = os.path.abspath(
             os.path.join(BASE_DIR, self['store.path'], self['store.filename']))
         if os.path.isfile(saved_coupons_file):
-            with open(saved_coupons_file) as saved_coupons:
-                return map(lambda c: Coupon(c), json.load(saved_coupons))
+            file = open(saved_coupons_file, 'r')
+            saved_coupons = file.read()
+            file.close()
+            return list(map(lambda c: Coupon(c), json.loads(saved_coupons)))
         else:
             return []
 
@@ -110,21 +112,28 @@ class Action(IApplicable):
             selected_coupons = self._retrieve_stored_info()
             status, requested_coupons = self._get_client().get_coupons(barcode)
             if status == 200:
-                actual_coupons = map(lambda coupon: self._mark_as_selected(selected_coupons, coupon), requested_coupons)
-                valid_coupons = filter(lambda coupon: not coupon['redeemed'] and not coupon['expired'], actual_coupons)
+                actual_coupons = list(
+                    map(lambda coupon: self._mark_as_selected(selected_coupons, coupon), requested_coupons))
+                valid_coupons = list(
+                    filter(lambda coupon: not coupon['redeemed'] and not coupon['expired'], actual_coupons))
         except Exception as e:
             self.logger.info('An exception has occurred %s', e.message)
         finally:
             return valid_coupons
 
     def _get_mocking_coupons(self):
+        requested_coupons = []
+        selected_coupons = self._retrieve_stored_info()
         saved_coupons_file = os.path.abspath(
             os.path.join(BASE_DIR, './mixmatch/actions/icoupon/mocking', 'icoupon_response.json'))
         if os.path.isfile(saved_coupons_file):
-            with open(saved_coupons_file) as saved_coupons:
-                return map(lambda c: Coupon(c), json.load(saved_coupons))
-        else:
-            return []
+            with open(saved_coupons_file, 'r', encoding='utf8') as f:
+                saved_coupons = f.read()
+                f.close()
+                requested_coupons = list(map(lambda c: Coupon(c), json.loads(saved_coupons)))
+        actual_coupons = list(map(lambda coupon: self._mark_as_selected(selected_coupons, coupon), requested_coupons))
+        valid_coupons = list(filter(lambda coupon: not coupon['redeemed'] and not coupon['expired'], actual_coupons))
+        return valid_coupons
 
 
 class CouponsView(wx.Frame):
@@ -301,8 +310,8 @@ class CouponsView(wx.Frame):
         if hasattr(sys, '_MEIPASS'):
             return os.path.join(sys._MEIPASS, relative_path)
         temp = os.path.join(os.path.abspath("."), relative_path)
-        print 'Relative path: %s' % relative_path
-        print 'Resource path for wxPython: %s' % temp
+        print('Relative path: %s' % relative_path)
+        print('Resource path for wxPython: %s' % temp)
         return temp
         # return os.path.join(os.path.abspath("."), relative_path)
 

@@ -1,13 +1,13 @@
 <validarmixmatch>
-    <bd>
-        <server>.</server>
-        <database>DBFREST2</database>
-        <user>ICGAdmin</user>
-        <CodTPV>TPV30522</CodTPV>
-    </bd>
-    <codvendedor>76</codvendedor>
-    <idpromocion>3105</idpromocion>
-    <identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXALCLAXTA 1234 311YXXXX0005 X00</identificador>
-    <aplicarmm>3201</aplicarmm>
-    <estadomm>There are no coupons up to date to be redeemed.</estadomm>
+   <bd>
+      <server>.</server>
+      <database>DBFREST2</database>
+      <user>ICGAdmin</user>
+      <CodTPV>TPV30522</CodTPV>
+   </bd>
+   <codvendedor>76</codvendedor>
+   <idpromocion>3105</idpromocion>
+   <identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXBCNLAXTA 1234 296YXXXX0015 X00</identificador>
+   <aplicarmm>3201</aplicarmm>
+   <estadomm>There are no coupons up to date to be redeemed.</estadomm>
 </validarmixmatch>

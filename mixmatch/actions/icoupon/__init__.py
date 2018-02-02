@@ -1,3 +1,3 @@
-from icoupon import Action, CouponsView, Coupon
+from .icoupon import Action, CouponsView, Coupon
 
 __all__ = ['Action', 'CouponsView']

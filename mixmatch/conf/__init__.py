@@ -1,6 +1,6 @@
 import os
 import sys
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 from ..core.exceptions import ImproperlyConfigured
 from ..utils.functional import LazyObject, empty
