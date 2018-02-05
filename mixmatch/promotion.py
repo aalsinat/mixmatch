@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import logging
 
 import os
@@ -23,6 +24,7 @@ class Promotion(object):
         for action in actions_list:
             action_module = importlib.import_module(''.join(['mixmatch.actions.', action]))
             self._actions.append(action_module.Action(settings[action]))
+
 
     def apply(self, icg_extend):
         """

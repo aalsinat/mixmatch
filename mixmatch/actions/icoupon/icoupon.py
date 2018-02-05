@@ -47,9 +47,9 @@ class Action(IApplicable):
                     self.logger.info('New selected list: %s', selected_list)
                     icg_extend.save_coupon(selected_list)
                     # 3. Update database
-                    # value = sum(coupon.value for coupon in selected_list)
-                    # self.logger.info('New value for coupons list %s', value)
-                    # icg_extend.update_db_promotion(value)
+                    value = sum(coupon.value for coupon in selected_list)
+                    self.logger.info('New value for coupons list %s', value)
+                    icg_extend.update_db_promotion(value)
                 else:
                     icg_extend.cancel_mix_and_match()
                     icg_extend.update_db_promotion(0.0)
@@ -213,7 +213,7 @@ class CouponsView(wx.Frame):
         logo_panel.SetBackgroundColour(wx.Colour(255, 255, 255))
         logo_grid_sizer = wx.GridSizer(0, 0, 0, 0)
         logo_bitmap = wx.StaticBitmap(logo_panel, wx.ID_ANY,
-                                      wx.Bitmap(CouponsView.resource_path(u'img/icoupon.png'), wx.BITMAP_TYPE_ANY),
+                                      wx.Bitmap(CouponsView.resource_path(u'mixmatch/actions/icoupon/img/icoupon.png'), wx.BITMAP_TYPE_ANY),
                                       wx.DefaultPosition, wx.DefaultSize, 0)
         logo_bitmap.SetBackgroundColour(wx.Colour(255, 255, 255))
         logo_grid_sizer.Add(logo_bitmap, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL, 1)

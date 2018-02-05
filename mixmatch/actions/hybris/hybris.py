@@ -21,13 +21,20 @@ class Action(IApplicable):
     def apply(self, icg_extend):
         self.logger.info('Showing coupons list')
         try:
-            coupons_list = self._get_coupons(icg_extend.get_barcode())
-            # UPDATE mixmatch.xmlFile
-            mix_and_match_status = '%s: %s' % (
-            self['mixmatch.message'], ','.join(map(lambda p: p['code'], coupons_list.pos)))
-            mix_and_match_code = coupons_list.promos[-1]
-            icg_extend.set_mix_and_match_status(mix_and_match_status)
-            icg_extend.set_mix_and_match_value(mix_and_match_code)
+            # coupons_list = self._get_coupons(icg_extend.get_barcode())
+            # # UPDATE mixmatch.xmlFile
+            # mix_and_match_status = '%s: %s' % (
+            # self['mixmatch.message'], ','.join(map(lambda p: p['code'], coupons_list.pos)))
+            # mix_and_match_code = coupons_list.promos[-1]
+            # icg_extend.set_mix_and_match_status(mix_and_match_status)
+            # icg_extend.set_mix_and_match_value(mix_and_match_code)
+
+            # For the purpose of testing, we will updates icg exchange file with what
+            # we read in the barcode.
+            icg_extend.set_mix_and_match_status(
+                'Because of the tests, mixmatch code to be applied is exactly the same that we read in the barcode.')
+            icg_extend.set_mix_and_match_value(icg_extend.get_barcode())
+
         except InvalidQR as e:
             self.logger.error('An InvalidQR validation %d - %s', e.status, e.message)
             icg_extend.set_mix_and_match_status(e.message)
