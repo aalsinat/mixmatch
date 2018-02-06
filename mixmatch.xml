@@ -6,8 +6,8 @@
       <CodTPV>TPV30522</CodTPV>
    </bd>
    <codvendedor>76</codvendedor>
-   <idpromocion>3105</idpromocion>
+   <idpromocion>3106</idpromocion>
    <identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXBCNLAXTA 1234 296YXXXX0015 X00</identificador>
-   <aplicarmm>3201</aplicarmm>
-   <estadomm>There are no coupons up to date to be redeemed.</estadomm>
+   <aplicarmm>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXBCNLAXTA 1234 296YXXXX0015 X00</aplicarmm>
+   <estadomm>Because of the tests, mixmatch code to be applied is exactly the same that we read in the barcode.</estadomm>
 </validarmixmatch>

@@ -7,7 +7,7 @@ import pypyodbc
 
 class ICGExtend(object):
     def __init__(self, constructor=()):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger(self.__class__.__module__)
         self.values = list(constructor)
         self.properties = dict(self.values)
         self.__read_file__()

@@ -3,7 +3,7 @@ import logging
 
 class IApplicable(object):
     def __init__(self, iterable=(), **properties):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger(self.__module__)
         self.__dict__.update(iterable, **properties)
 
     def get_id(self):
