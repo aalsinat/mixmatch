@@ -1,8 +1,7 @@
-import importlib
-import importlib.util
-import logging
-import os
+from importlib import import_module
+from logging import getLogger, INFO, Formatter
 from logging.handlers import TimedRotatingFileHandler
+from os import path, makedirs
 
 from mixmatch.conf import settings, BASE_DIR
 from mixmatch.core.icg import ICGExtend
@@ -10,19 +9,18 @@ from mixmatch.core.icg import ICGExtend
 
 class Promotion(object):
     """
-    Esta clase es el punto de entrada para la aplicacion de promociones y descuentos.
-    Sera la responsable de cargar todas las acciones disponibles y seleccionadas.
-    En base al fichero de intercambio de ICG decide que accion debe ejecutarse
+    This class is the entry point for the application of promotions and discounts. It will be responsible for uploading
+    all available and selected actions. Based on the ICG transfer file he decides which action should be executed.
     """
 
     def __init__(self, promotions):
         self._actions = []
         self._load_actions(promotions['actions'].split(','))
-        self.logger = logging.getLogger(self.__class__.__module__)
+        self.logger = getLogger(self.__class__.__module__)
 
     def _load_actions(self, actions_list):
         for action in actions_list:
-            action_module = importlib.import_module(''.join(['mixmatch.actions.', action]))
+            action_module = import_module(''.join(['mixmatch.actions.', action]))
             self._actions.append(action_module.Action(settings[action]))
 
     def apply(self, icg_extend):
@@ -49,13 +47,13 @@ def apply(argv=None):
     # Initialize log directory
     log_path = settings.log['path']
     log_filename = settings.log['name']
-    directory = os.path.join(BASE_DIR, log_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    filename = os.path.join(directory, log_filename)
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)-8s - %(name)s %(message)s')
+    directory = path.join(BASE_DIR, log_path)
+    if not path.exists(directory):
+        makedirs(directory)
+    filename = path.join(directory, log_filename)
+    logger = getLogger(__name__)
+    logger.setLevel(INFO)
+    formatter = Formatter(fmt='%(asctime)s - %(levelname)-8s - %(name)s %(message)s')
     # if not len(logger.handlers):
     handler = TimedRotatingFileHandler(filename, when='d', interval=1, backupCount=15)
     handler.setFormatter(formatter)

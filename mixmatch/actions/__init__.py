@@ -1,9 +1,9 @@
-import logging
+from logging import getLogger
 
 
 class IApplicable(object):
     def __init__(self, iterable=(), **properties):
-        self.logger = logging.getLogger(self.__module__)
+        self.logger = getLogger(self.__module__)
         self.__dict__.update(iterable, **properties)
 
     def get_id(self):
