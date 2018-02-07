@@ -1,5 +1,5 @@
 from urllib3.exceptions import ConnectTimeoutError
-
+from json import dumps
 from mixmatch.actions import IApplicable
 from .api import RestClient
 from .exceptions import InvalidQR
@@ -23,6 +23,9 @@ class Action(IApplicable):
         promos_list = raw_promotions.split('|')
         promos = {k: v for k, v in (promo.split(':') for promo in promos_list)}
         return promos
+    def __get_user(self, barcode):
+        travelers =  barcode.split('-')[2]
+        return travelers.split(':')[1]
 
     def apply(self, icg_extend):
         self.logger.info('Showing coupons list')
@@ -35,7 +38,7 @@ class Action(IApplicable):
             icg_extend.set_mix_and_match_status(mix_and_match_status)
             icg_extend.set_mix_and_match_value(mix_and_match_code)
 
-            icg_extend.save_coupon(self.promotions[mix_and_match_code])
+            icg_extend.save_coupon(dumps(dict(user_id=self.__get_user(icg_extend.get_barcode()), mm_code=mix_and_match_code, mm_name=self.promotions[mix_and_match_code])))
 
             # For the purpose of testing, we will updates icg exchange file with what
             # we read in the barcode.
@@ -52,7 +55,7 @@ class Action(IApplicable):
             icg_extend.set_mix_and_match_status(e.args[1])
             icg_extend.set_mix_and_match_value('0')
         except Exception as e:
-            self.logger.error('An exception has occurred %s', e.message)
+            self.logger.error('An exception has occurred %s', e.args[1])
 
     def _get_client(self):
         return RestClient({
