@@ -14,9 +14,15 @@ ACTION_NAME = 'HYBRIS'
 class Action(IApplicable):
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
+        self.promotions = self.__get_promotions(self['mixmatch.promotions'])
 
     def get_name(self):
         return ACTION_NAME
+
+    def __get_promotions(self, raw_promotions):
+        promos_list = raw_promotions.split('|')
+        promos = {k: v for k, v in (promo.split(':') for promo in promos_list)}
+        return promos
 
     def apply(self, icg_extend):
         self.logger.info('Showing coupons list')
@@ -28,6 +34,8 @@ class Action(IApplicable):
             mix_and_match_code = coupons_list.promos[-1]
             icg_extend.set_mix_and_match_status(mix_and_match_status)
             icg_extend.set_mix_and_match_value(mix_and_match_code)
+
+            icg_extend.save_coupon(self.promotions[mix_and_match_code])
 
             # For the purpose of testing, we will updates icg exchange file with what
             # we read in the barcode.
