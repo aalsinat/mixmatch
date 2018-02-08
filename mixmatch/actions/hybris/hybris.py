@@ -35,8 +35,8 @@ class Action(IApplicable):
         try:
             coupons_list = self._get_coupons(icg_extend.get_barcode())
             # UPDATE mixmatch.xmlFile
-            mix_and_match_status = '%s: %s' % (
-                self['mixmatch.message'], ','.join(map(lambda p: p['code'], coupons_list.pos)))
+            mix_and_match_status = '%s' % (
+                ','.join(map(lambda p: p['name'], coupons_list.pos)))
             mix_and_match_code = coupons_list.promos[-1]
             icg_extend.set_mix_and_match_status(mix_and_match_status)
             icg_extend.set_mix_and_match_value(mix_and_match_code)
