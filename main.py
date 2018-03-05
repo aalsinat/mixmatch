@@ -1,9 +1,8 @@
-import sys
+from os import environ
+from sys import argv
 
-import os
-
-from mixmatch import promotion
+import mixmatch
 
 if __name__ == '__main__':
-    os.environ.setdefault('READER_SETTINGS', 'properties.ini')
-    promotion.apply(sys.argv)
+    environ.setdefault('READER_SETTINGS', 'properties.ini')
+    mixmatch.apply(argv)

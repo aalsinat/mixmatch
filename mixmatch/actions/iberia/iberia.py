@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 
 from zeep import Client
 
@@ -10,7 +10,7 @@ ACTION_NAME = 'iberia'
 class Action(IApplicable):
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = getLogger(self.__class__.__name__)
 
     def get_name(self):
         return ACTION_NAME

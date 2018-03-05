@@ -1,7 +1,7 @@
-import copy
-import operator
-import six
+from copy import copy, deepcopy
+from operator import attrgetter, eq, ne, getitem, setitem, delitem, contains
 
+from six import PY3
 
 empty = object()
 
@@ -11,6 +11,7 @@ def new_method_proxy(func):
         if self._wrapped is empty:
             self._setup()
         return func(self._wrapped, *args)
+
     return inner
 
 
@@ -90,7 +91,7 @@ class LazyObject(object):
             return type(self)()
         else:
             # If initialized, return a copy of the wrapped object.
-            return copy.copy(self._wrapped)
+            return copy(self._wrapped)
 
     def __deepcopy__(self, memo):
         if self._wrapped is empty:
@@ -99,9 +100,9 @@ class LazyObject(object):
             result = type(self)()
             memo[id(self)] = result
             return result
-        return copy.deepcopy(self._wrapped, memo)
+        return deepcopy(self._wrapped, memo)
 
-    if six.PY3:
+    if PY3:
         __bytes__ = new_method_proxy(bytes)
         __str__ = new_method_proxy(str)
         __bool__ = new_method_proxy(bool)
@@ -115,18 +116,18 @@ class LazyObject(object):
 
     # Need to pretend to be the wrapped class, for the sake of objects that
     # care about this (especially in equality tests)
-    __class__ = property(new_method_proxy(operator.attrgetter("__class__")))
-    __eq__ = new_method_proxy(operator.eq)
-    __ne__ = new_method_proxy(operator.ne)
+    __class__ = property(new_method_proxy(attrgetter("__class__")))
+    __eq__ = new_method_proxy(eq)
+    __ne__ = new_method_proxy(ne)
     __hash__ = new_method_proxy(hash)
 
     # List/Tuple/Dictionary methods support
-    __getitem__ = new_method_proxy(operator.getitem)
-    __setitem__ = new_method_proxy(operator.setitem)
-    __delitem__ = new_method_proxy(operator.delitem)
+    __getitem__ = new_method_proxy(getitem)
+    __setitem__ = new_method_proxy(setitem)
+    __delitem__ = new_method_proxy(delitem)
     __iter__ = new_method_proxy(iter)
     __len__ = new_method_proxy(len)
-    __contains__ = new_method_proxy(operator.contains)
+    __contains__ = new_method_proxy(contains)
 
 
 def unpickle_lazyobject(wrapped):
@@ -141,6 +142,7 @@ class SimpleLazyObject(LazyObject):
     """
     A lazy object initialized from any function.
     """
+
     def __init__(self, func):
         """
         Pass in a callable that returns the object to be wrapped.
@@ -172,7 +174,7 @@ class SimpleLazyObject(LazyObject):
             return SimpleLazyObject(self._setupfunc)
         else:
             # If initialized, return a copy of the wrapped object.
-            return copy.copy(self._wrapped)
+            return copy(self._wrapped)
 
     def __deepcopy__(self, memo):
         if self._wrapped is empty:
@@ -181,4 +183,4 @@ class SimpleLazyObject(LazyObject):
             result = SimpleLazyObject(self._setupfunc)
             memo[id(self)] = result
             return result
-        return copy.deepcopy(self._wrapped, memo)
+        return deepcopy(self._wrapped, memo)
