@@ -1,12 +1,37 @@
+from datetime import datetime
+from logging import getLogger
 from re import search
 
+from lxml import etree
+from requests import Session
 from zeep import Client
-from datetime import datetime
+from zeep import Plugin
+from zeep.cache import SqliteCache
+from zeep.transports import Transport
 
 from mixmatch.actions import IApplicable
 from .exceptions import AuthenticationError
 
 ACTION_NAME = 'IBERIA'
+
+
+class AddAuthorizationPlugin(Plugin):
+    def __init__(self, logger):
+        self.logger = logger
+        self._token = None
+
+    def egress(self, envelope, http_headers, operation, binding_options):
+        try:
+            if self._token is not None:
+                http_headers.update(dict(Authorization=self._token))
+            self.logger.info('Operation: %s - Http headers: %s', operation, str(http_headers))
+            self.logger.info(etree.tostring(envelope, pretty_print=True))
+        except etree.XMLSyntaxError:
+            self.logger.error('Invalid XML content received.')
+        return envelope, http_headers
+
+    def set_token(self, token):
+        self._token = token
 
 
 class RestClient(object):
@@ -24,17 +49,13 @@ class RestClient(object):
 
     def __init__(self, iterable=(), **kwargs):
         self.__dict__.update(iterable, **kwargs)
-        self.__client = Client(self.base_url)
+        self.logger = getLogger(self.__module__)
+        self._add_authorization = AddAuthorizationPlugin(self.logger)
+        self._session = Session()
+        self._session.verify = False
+        self.__client = Client(self.base_url, plugins=[self._add_authorization],
+                               transport=Transport(session=self._session, cache=SqliteCache()))
         self.__credentials = {'user': self.user, 'pwd': self.password}
-
-    @staticmethod
-    def __create_headers(content_type, accept, token):
-        headers = {
-            'Content-Type': content_type,
-            'Accept': accept,
-            'Authorization': 'Bearer {}'.format(token)
-        }
-        return headers
 
     def __get_token(self):
         try:
@@ -46,8 +67,22 @@ class RestClient(object):
 
     def get_coupons(self, barcode):
         status, access_token = self.__get_token()
-        headers = self.__create_headers('text/xml', 'text/xml', access_token)
-        return status, access_token
+        response = None
+        if status == 200 and access_token is not None:
+            self._add_authorization.set_token(access_token)
+            # Check barcode to identify whether it is a ticket or a voucher
+            is_voucher = True if search(r'^COUV', barcode) is not None else False
+            type = 'BON' if is_voucher else 'TKT'
+            current_time = datetime.now().strftime('%Y%m%d %H:%M')
+            body = {
+                'data': barcode,
+                'type': type,
+                'airport': self.airport,
+                'idProvider': self.id_provider,
+                'csdate': '20180402 12:00'  # current_time
+            }
+            response = self.__client.service.GetVoucherAvailability(**body)
+        return status, response
 
 
 class Action(IApplicable):
@@ -67,18 +102,22 @@ class Action(IApplicable):
         })
 
     def __get_coupons(self, barcode):
-        try:
-            status, token = self.__get_client().get_coupons(barcode)
-            self.logger.info('Login response: status: %d - token: %s', status, token)
-        except AuthenticationError as e:
-            self.logger.error(e)
-            raise e
+        status, coupons = self.__get_client().get_coupons(barcode)
+        self.logger.info('List of coupons:\n %s', coupons)
 
     def apply(self, icg_extend):
-        # Check barcode to identify whether it is a ticket or a voucher
-        is_voucher = True if search(r'^COUV', icg_extend.get_barcode()) is not None else False
-        type = 'BON' if is_voucher else 'TKT'
-        current_time = datetime.now()
-        cs_date = current_time.strftime('%Y%m%d %H:%M')
+        """
+        Si el codigo que escaneamos en un billete o un boarding pass, debemos mostrar la lista de vouchers
+        que nos devuelve el servicio.
+        En el caso de los bonos, la respuesta solo nos va a devolver una gratuidad, de modo que no debemos mostrar
+        nada.
+        :param icg_extend:
+        :return:
+        """
         # We should call to GetVoucherAvailability service
-        self.__get_coupons(icg_extend.get_barcode())
+        try:
+            self.__get_coupons(icg_extend.get_barcode())
+        except AuthenticationError as auth:
+            self.logger.error(auth.message)
+        except Exception as e:
+            self.logger.error(str(e))
