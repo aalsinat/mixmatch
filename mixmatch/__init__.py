@@ -58,7 +58,7 @@ def apply(argv=None):
     handler = TimedRotatingFileHandler(filename, when='d', interval=1, backupCount=15)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    logger.info("Current application path: %s", BASE_DIR)
+    logger.info("Following promotions will be attempted: %s", settings.promotions['actions'])
 
     Promotion(settings.promotions).apply(ICGExtend(settings.icg.items()))
 
