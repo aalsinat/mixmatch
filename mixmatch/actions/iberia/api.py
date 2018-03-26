@@ -87,10 +87,21 @@ class RestClient(object):
         except Exception as e:
             raise AuthenticationError(str(e))
 
-    def __chech_type(self, barcode):
+    @staticmethod
+    def __is_voucher(barcode):
+        return True if search(r'^0002\d{2}', barcode) is not None else False
+
+    @staticmethod
+    def __get_voucher_id(barcode):
+        return split(r'^0002\d{2}', barcode)[1]
+
+    def __check_type(self, barcode):
         """ Given a barcode tries to find out what type of document has been scanned"""
-        return {'data': split(r'^000200', barcode)[1], 'type': 'BON'} if search(r'^0002', barcode) is not None else {
+        return {'data': self.__get_voucher_id(barcode), 'type': 'BON'} if self.__is_voucher(barcode) else {
             'data': barcode, 'type': 'TKT'}
+
+    def is_voucher(self, scanned_string):
+        return self.__is_voucher(scanned_string)
 
     @staticmethod
     def __to_coupons(translation, provided_list):
@@ -101,15 +112,11 @@ class RestClient(object):
     def get_coupons(self, barcode):
         status, access_token = self.__get_token()
         self._add_authorization.set_token(access_token)
-        # Check barcode to identify whether it is a ticket or a voucher
-        is_voucher = True if search(r'^COUV', barcode) is not None else False
-        type = 'BON' if is_voucher else 'TKT'
-        current_time = datetime.now().strftime('%Y%m%d %H:%M')
-        body = self.__chech_type(barcode)
+        body = self.__check_type(barcode)
         body.update({
             'airport': self.airport,
             'idProvider': self.id_provider,
-            'csdate': '20180402 12:00'  # current_time
+            'csdate': '20180322 12:00'  # datetime.now().strftime('%Y%m%d %H:%M')
         })
         response = self.__client.service.GetVoucherAvailability(**body)
         if response.code == 'OK':
@@ -135,5 +142,3 @@ class RestClient(object):
 
         def set_token(self, token):
             self._token = token
-
-    # TODO: Analize how to differentiate tickets from vouchers.
