@@ -1,3 +1,3 @@
-from .iberia import Action
+from .iberia import Action, CouponsView
 
-__all__ = ['Action']
+__all__ = ['Action', 'CouponsView']

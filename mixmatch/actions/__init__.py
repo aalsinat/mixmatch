@@ -12,7 +12,7 @@ class IApplicable(object):
     def get_name(self):
         raise Exception('Method not implemented!')
 
-    def apply(self, identifier, icg_extend):
+    def apply(self, icg_extend):
         raise Exception('Method not implemented!')
 
     def __getattr__(self, name):

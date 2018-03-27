@@ -6,7 +6,7 @@ from ..core.exceptions import ImproperlyConfigured
 from ..utils.functional import LazyObject, empty
 
 ENVIRONMENT_SETTINGS = "READER_SETTINGS"
-# BASE_DIR = sys._MEIPASS if getattr(sys, 'frozen', False) else path.dirname(path.abspath(sys.argv[0]))
+BASE_DIR = sys._MEIPASS if getattr(sys, 'frozen', False) else path.dirname(path.abspath(sys.argv[0]))
 BASE_DIR = path.dirname(sys.executable)
 
 

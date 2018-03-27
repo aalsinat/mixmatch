@@ -99,4 +99,5 @@ class ICGExtend(object):
     def cancel_coupon(self):
         coupon_filename = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.validation'))
         if path.isfile(path.abspath(coupon_filename)):
+            self.logger.info('Cancelling coupon %s', path.abspath(coupon_filename))
             remove(path.abspath(coupon_filename))

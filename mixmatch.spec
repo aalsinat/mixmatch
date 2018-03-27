@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:\\Users\\aalsinat\\Development\\mktinabox\\mixmatch'],
+             pathex=['C:\\Users\\alexa\\Development\\mktinabox\\source\\mixmatch'],
              binaries=[],
              datas=[('mixmatch\\actions', 'mixmatch\\actions')],
              hiddenimports=['json', 'wx', 'zeep', 'urllib3'],
@@ -18,16 +18,12 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          exclude_binaries=True,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
           name='mixmatch',
           debug=False,
           strip=False,
           upx=True,
-          console=False , icon='favicon.ico')
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               name='mixmatch')
+          runtime_tmpdir=None,
+          console=True , icon='favicon.ico')

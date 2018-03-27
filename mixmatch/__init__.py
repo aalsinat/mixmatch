@@ -1,5 +1,5 @@
 from importlib import import_module
-from logging import getLogger, INFO, Formatter
+from logging import getLogger, Formatter, INFO, DEBUG
 from logging.handlers import TimedRotatingFileHandler
 from os import path, makedirs
 
@@ -47,20 +47,25 @@ def apply(argv=None):
     # Initialize log directory
     log_path = settings.log['path']
     log_filename = settings.log['name']
+    log_debug = eval(settings.log['debug'])
     directory = path.join(BASE_DIR, log_path)
     if not path.exists(directory):
         makedirs(directory)
     filename = path.join(directory, log_filename)
     logger = getLogger(__name__)
-    logger.setLevel(INFO)
+    if log_debug:
+        logger.setLevel(DEBUG)
+    else:
+        logger.setLevel(INFO)
     formatter = Formatter(fmt='%(asctime)s - %(levelname)-8s - %(name)s %(message)s')
     # if not len(logger.handlers):
     handler = TimedRotatingFileHandler(filename, when='d', interval=1, backupCount=15)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    logger.info("Current application path: %s", BASE_DIR)
+    logger.info("Following promotions will be attempted: %s", settings.promotions['actions'])
 
     Promotion(settings.promotions).apply(ICGExtend(settings.icg.items()))
 
 
 __all__ = ['apply', 'Promotion']
+
