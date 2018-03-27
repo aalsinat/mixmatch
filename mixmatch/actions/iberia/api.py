@@ -9,6 +9,7 @@ from zeep import Client
 from zeep import Plugin
 from zeep.cache import InMemoryCache
 from zeep.transports import Transport
+from zeep.exceptions import TransportError
 
 from .exceptions import VoucherAvailabilityRequestError, AuthenticationError
 
@@ -77,15 +78,23 @@ class RestClient(object):
                                transport=Transport(session=self._session, cache=InMemoryCache()))
         self.__credentials = {'user': self.user, 'pwd': self.password}
 
-    def __get_token(self):
-        try:
-            login = self.__client.service.Login(**self.__credentials)
-            if login.code == 'OK':
-                return 200, login.tkn
-            else:
-                raise AuthenticationError('Authentication error code: {}'.format(login.code))
-        except Exception as e:
-            raise AuthenticationError(str(e))
+    def __get_token(self, max_retries=3):
+        retry = 1
+        self.logger.debug('Attempt (%d) to retrieve the token', retry)
+        while retry < max_retries:
+            try:
+                login = self.__client.service.Login(**self.__credentials)
+                if login.code == 'OK':
+                    return 200, login.tkn
+                else:
+                    raise AuthenticationError('Authentication error code: {}'.format(login.code))
+            except TransportError as e:
+                retry += 1
+                self.logger.debug('New attempt (%d) to retrieve the token.', retry)
+                if retry == max_retries:
+                    raise AuthenticationError(e.message)
+            except Exception as e:
+                raise AuthenticationError(str(e))
 
     @staticmethod
     def __is_voucher(barcode):
@@ -134,8 +143,8 @@ class RestClient(object):
             try:
                 if self._token is not None:
                     http_headers.update(dict(Authorization=self._token))
-                self.logger.info('Operation: %s - Http headers: %s', operation, str(http_headers))
-                self.logger.info(etree.tostring(envelope, pretty_print=True))
+                self.logger.debug('Operation: %s - Http headers: %s', operation, str(http_headers))
+                self.logger.debug(etree.tostring(envelope, pretty_print=True))
             except etree.XMLSyntaxError:
                 self.logger.error('Invalid XML content received.')
             return envelope, http_headers
