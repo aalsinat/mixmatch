@@ -5,8 +5,9 @@ from os import path
 
 import wx
 
-from mixmatch.actions import IApplicable
+from mixmatch.actions import IApplicable, PatternMatcher
 from mixmatch.conf import BASE_DIR
+from mixmatch.core.exceptions import DatabaseConnectionException
 from .api import RestClient, Coupon
 
 # Constants for returning status on view showing coupon list
@@ -17,6 +18,9 @@ ACTION_NAME = 'ICOUPON'
 
 
 class Action(IApplicable):
+    ACTION_NAME = 'ICOUPON'
+    promotion_pattern = r'^(.*)$'
+
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
         self.current_coupons_list = self._retrieve_stored_info()
@@ -24,46 +28,57 @@ class Action(IApplicable):
     def get_name(self):
         return ACTION_NAME
 
-    def apply(self, icg_extend):
-        self.logger.info('Showing coupons list')
-        coupons_list = self._get_coupons(icg_extend.get_barcode())
-        # coupons_list = self._get_mocking_coupons()
+    def check_pattern(self, barcode: str, matcher: PatternMatcher):
+        return matcher.match(barcode, 0)
 
-        if len(coupons_list) > 0:
-            self.logger.info('Coupons list length is %d', len(coupons_list))
-            app = wx.App()
-            view = CouponsView(None, coupons_list, icg_extend)
-            view.ShowFullScreen(True)
-            # view.Maximize(True)
-            app.MainLoop()
-            if view.action == VIEW_REDEEM:
-                # 1. Exchange file update, changing aplicarmm tag value with manager.promotion.id value
-                icg_extend.set_mix_and_match()
-                icg_extend.set_mix_and_match_status('Coupons selected successfully')
-                # 2. Create a new file for saving selected coupons merged with previous stored ones.
-                selected_list = self._merge_coupon_lists(view.coupons, self.current_coupons_list)
-                if len(selected_list) > 0:
-                    self.logger.info('New selected list: %s', selected_list)
-                    icg_extend.save_coupon(selected_list)
-                    # 3. Update database
-                    value = sum(coupon.value for coupon in selected_list)
-                    self.logger.info('New value for coupons list %s', value)
-                    icg_extend.update_db_promotion(value)
+    def apply(self, icg_extend):
+        if self.check_pattern(icg_extend.get_barcode(), PatternMatcher(self['mixmatch.pattern'])) is not None:
+            try:
+                self.logger.debug('Check for coupons list')
+                coupons_list = self._get_coupons(icg_extend.get_barcode())
+                # coupons_list = self._get_mocking_coupons()
+
+                if len(coupons_list) > 0:
+                    self.logger.info('Coupons list length is %d', len(coupons_list))
+                    app = wx.App()
+                    view = CouponsView(None, coupons_list, icg_extend)
+                    view.ShowFullScreen(True)
+                    # view.Maximize(True)
+                    app.MainLoop()
+                    if view.action == VIEW_REDEEM:
+                        # 1. Exchange file update, changing aplicarmm tag value with manager.promotion.id value
+                        icg_extend.set_mix_and_match()
+                        icg_extend.set_mix_and_match_status('Coupons selected successfully')
+                        # 2. Create a new file for saving selected coupons merged with previous stored ones.
+                        selected_list = self._merge_coupon_lists(view.coupons, self.current_coupons_list)
+                        if len(selected_list) > 0:
+                            self.logger.info('New selected list: %s', selected_list)
+                            icg_extend.save_coupon(self.get_name(), selected_list)
+                            # 3. Update database
+                            value = sum(coupon.value for coupon in selected_list)
+                            self.logger.info('New value for coupons list %s', value)
+                            icg_extend.update_db_promotion(value)
+                        else:
+                            icg_extend.cancel_mix_and_match()
+                            icg_extend.update_db_promotion(0.0)
+                            icg_extend.cancel_coupon()
+                            icg_extend.set_mix_and_match_status('No coupons selected for redemption.')
+                    elif view.action == VIEW_CANCEL:
+                        icg_extend.cancel_mix_and_match()
+                        icg_extend.update_db_promotion(0.0)
+                        icg_extend.cancel_coupon()
+                        icg_extend.set_mix_and_match_status('Cancelled redemption.')
+                    else:
+                        self.logger.info('Nothing has been done')
+                    self.logger.info('Returned list from Screen: %s', view.coupons)
                 else:
-                    icg_extend.cancel_mix_and_match()
-                    icg_extend.update_db_promotion(0.0)
-                    icg_extend.cancel_coupon()
-                    icg_extend.set_mix_and_match_status('No coupons selected for redemption.')
-            elif view.action == VIEW_CANCEL:
-                icg_extend.cancel_mix_and_match()
-                icg_extend.update_db_promotion(0.0)
-                icg_extend.cancel_coupon()
-                icg_extend.set_mix_and_match_status('Cancelled redemption.')
-            else:
-                self.logger.info('Nothing has been done')
-            self.logger.info('Returned list from Screen: %s', view.coupons)
+                    icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
+            except DatabaseConnectionException as e:
+                self.logger.error(e.message)
+            except Exception as e:
+                self.logger.error(e)
         else:
-            icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
+            self.logger.debug('Scanned value does not match %s pattern.', self.get_name())
 
     @staticmethod
     def _mark_as_selected(selected_list, coupon):
@@ -101,7 +116,7 @@ class Action(IApplicable):
             file = open(saved_coupons_file, 'r')
             saved_coupons = file.read()
             file.close()
-            return list(map(lambda c: Coupon(c), loads(saved_coupons)))
+            return list(map(lambda c: Coupon(c), loads(saved_coupons)['coupon']))
         else:
             return []
 
@@ -284,7 +299,6 @@ class CouponsView(wx.Frame):
         :return:
         """
         self.action = VIEW_REDEEM
-
         self.logger.info('Leaving coupons list view with %s', self.action)
         self.Close()
 

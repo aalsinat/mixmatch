@@ -5,7 +5,7 @@ from os import path
 
 import wx
 
-from mixmatch.actions import IApplicable
+from mixmatch.actions import IApplicable, PatternMatcher
 from mixmatch.conf import BASE_DIR
 from .api import RestClient, Coupon
 from .exceptions import AuthenticationError, VoucherAvailabilityRequestError
@@ -15,19 +15,21 @@ VIEW_REDEEM = 'REDEEM'
 VIEW_CANCEL = 'CANCEL'
 VIEW_EXIT = 'EXIT'
 
-ACTION_NAME = 'IBERIA'
-
 
 class Action(IApplicable):
+    ACTION_NAME = 'IBERIA'
+    voucher_pattern = r'^(cvou:)?((0002\d{2})(\d{7}))(e)?$'
+    ticket_pattern = r'^\d{13}$'
+
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
 
     def get_name(self):
-        return ACTION_NAME
+        return type(self).ACTION_NAME
 
     def __get_client(self):
         return RestClient({
-            'base_url': self['ws.base.url.test'],
+            'base_url': self['ws.base.url.prod'],
             'user': self['ws.user'],
             'password': self['ws.pwd'],
             'airport': self['voucher.airport'],
@@ -53,6 +55,9 @@ class Action(IApplicable):
     def __is_voucher(self, barcode):
         return self.__get_client().is_voucher(barcode)
 
+    def check_pattern(self, barcode: str, matcher: PatternMatcher) -> str:
+        return matcher.match(barcode, 4, 6)
+
     def apply(self, icg_extend):
         """
         Si el codigo que escaneamos en un billete o un boarding pass, debemos mostrar la lista de vouchers
@@ -62,60 +67,63 @@ class Action(IApplicable):
         :param icg_extend:
         :return:
         """
-        try:
-            coupons_list = self.__get_coupons(icg_extend.get_barcode())
-            self.logger.info('List of coupons:\n %s', coupons_list)
-            # Given a coupons list we should show them using a windows form:
-            # Options:
-            #   - List of buttons on the header
-            #   - Path to logo to be displayed
-            #   - List of coupons to be shown. Given a list of objects, we should transform them
+        match = self.check_pattern(icg_extend.get_barcode(), PatternMatcher(self['mixmatch.pattern']))
+        if match is not None:
+            is_voucher = True if match[0] is not None else False
+            try:
+                coupons_list = self.__get_coupons(icg_extend.get_barcode())
+                self.logger.info('List of coupons:\n %s', coupons_list)
+                # Given a coupons list we should show them using a windows form:
+                # Options:
+                #   - List of buttons on the header
+                #   - Path to logo to be displayed
+                #   - List of coupons to be shown. Given a list of objects, we should transform them
 
-            if len(coupons_list) > 0:
-                self.logger.debug('Coupons list length is %d', len(coupons_list))
-                # Selection screen is only displayed if the scanned value matches to an airplane ticket or a boarding
-                # pass.
-                if not self.__is_voucher(icg_extend.get_barcode()):
-                    app = wx.App()
-                    view = CouponsView(None, coupons_list, icg_extend)
-                    view.ShowFullScreen(True)
-                    # view.Maximize(True)
-                    app.MainLoop()
-                    if view.action == VIEW_REDEEM:
-                        # 1. Exchange file update, changing aplicarmm tag value with manager.promotion.id value
-                        icg_extend.set_mix_and_match()
-                        icg_extend.set_mix_and_match_status('Coupons selected successfully')
-                        # 2. Create a new file for saving selected coupons merged with previous stored ones.
-                        selected_list = list(filter(lambda c: c.selected, view.coupons))
-                        if len(selected_list) > 0:
-                            self.logger.debug('New selected list: %s', selected_list)
-                            icg_extend.save_coupon(selected_list)
-                        else:
+                if len(coupons_list) > 0:
+                    self.logger.debug('Coupons list length is %d', len(coupons_list))
+                    if not self.__is_voucher(icg_extend.get_barcode()):
+                        app = wx.App()
+                        view = CouponsView(None, coupons_list, icg_extend)
+                        view.ShowFullScreen(True)
+                        # view.Maximize(True)
+                        app.MainLoop()
+                        if view.action == VIEW_REDEEM:
+                            # 1. Exchange file update, changing aplicarmm tag value with manager.promotion.id value
+                            icg_extend.set_mix_and_match()
+                            icg_extend.set_mix_and_match_status('Coupons selected successfully')
+                            # 2. Create a new file for saving selected coupons merged with previous stored ones.
+                            selected_list = list(filter(lambda c: c.selected, view.coupons))
+                            if len(selected_list) > 0:
+                                self.logger.debug('New selected list: %s', selected_list)
+                                icg_extend.save_coupon(self.get_name(), selected_list)
+                            else:
+                                icg_extend.cancel_mix_and_match()
+                                icg_extend.cancel_coupon()
+                                icg_extend.set_mix_and_match_status('No coupons selected for redemption.')
+                        elif view.action == VIEW_CANCEL:
                             icg_extend.cancel_mix_and_match()
                             icg_extend.cancel_coupon()
-                            icg_extend.set_mix_and_match_status('No coupons selected for redemption.')
-                    elif view.action == VIEW_CANCEL:
-                        icg_extend.cancel_mix_and_match()
-                        icg_extend.cancel_coupon()
-                        icg_extend.set_mix_and_match_status('Cancelled redemption.')
+                            icg_extend.set_mix_and_match_status('Cancelled redemption.')
+                        else:
+                            self.logger.debug('Nothing has been done')
+                            icg_extend.cancel_coupon()
+                        self.logger.debug('Returned list from Screen: %s', view.coupons)
                     else:
-                        self.logger.debug('Nothing has been done')
-                        icg_extend.cancel_coupon()
-                    self.logger.debug('Returned list from Screen: %s', view.coupons)
-                else:
-                    # When the scanned value corresponds to a voucher, the value returned will be only one.
-                    icg_extend.set_mix_and_match()
-                    icg_extend.set_mix_and_match_status('Coupons selected successfully')
-                    icg_extend.save_coupon(coupons_list)
+                        # When the scanned value corresponds to a voucher, the value returned will be only one.
+                        icg_extend.set_mix_and_match()
+                        icg_extend.set_mix_and_match_status('Coupons selected successfully')
+                        icg_extend.save_coupon(self.get_name(), coupons_list)
 
-            else:
-                icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
-        except AuthenticationError as auth:
-            self.logger.error(auth.message)
-        except VoucherAvailabilityRequestError as e:
-            self.logger.error(e.message)
-        except Exception as e:
-            self.logger.error(str(e))
+                else:
+                    icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
+            except AuthenticationError as auth:
+                self.logger.error(auth.message)
+            except VoucherAvailabilityRequestError as e:
+                self.logger.error(e.message)
+            except Exception as e:
+                self.logger.error(str(e))
+        else:
+            self.logger.debug('Scanned value does not match %s pattern.', self.get_name())
 
 
 # TODO: En el constructor debemos incorporar un parametro para decidir si se puede seleccionar uno o multiples cupones

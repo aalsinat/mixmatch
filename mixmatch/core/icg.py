@@ -2,7 +2,10 @@ from logging import getLogger
 from os import path, remove
 from xml.etree import ElementTree
 
+from datetime import datetime, timedelta
 from pypyodbc import connect
+from json import dumps
+from mixmatch.core.exceptions import DatabaseConnectionException
 
 
 class ICGExtend(object):
@@ -40,7 +43,7 @@ class ICGExtend(object):
             self.logger.info('Connection string: %s', connection_string)
             return connect(connection_string)
         except Exception as e:
-            self.logger.error("Connection error: %s", e.message)
+            raise DatabaseConnectionException('Error connecting to %s', connection_string)
 
     def get_mix_and_match(self):
         if self.root is not None:
@@ -78,10 +81,10 @@ class ICGExtend(object):
         cursor = connection.cursor()
         cursor.execute(select_sql, [self.properties.get('manager.promotion.id')])
         results = cursor.fetchone()
-        self.logger.info('Original results %s', results)
+        self.logger.debug('Original results %s', results)
         values = results[0].split('|')
-        self.logger.info('Results from executed query: %s', values)
-        self.logger.info('New value %s', new_value)
+        self.logger.debug('Results from executed query: %s', values)
+        self.logger.debug('New value %s', new_value)
         values[0] = '%10.18f' % new_value
         values[0] = values[0].replace('.', ',')
         promotion = '|'.join(str(value) for value in values)
@@ -90,11 +93,31 @@ class ICGExtend(object):
         cursor.execute(update_sql, [promotion, self.properties.get('manager.promotion.id')])
         connection.commit()
 
-    def save_coupon(self, coupon):
+    def activate_mix_and_match(self, promotions: list):
+        """
+        Updates validity dates of the promotion so that it can be applied.
+        :param mm_id: Promotion identifier
+        """
+        self.logger.debug('Activating M&M with code %s', promotions)
+        connection = self.connect()
+        cursor = connection.cursor()
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=1)
+        update_sql = r'UPDATE PROMOCIONES SET FECHAINICIAL = ?, FECHAFINAL = ? WHERE IDPROMOCION = ?'
+        self.logger.debug('SQL sentence to be executed: %s', update_sql)
+        self.logger.debug('Promotions: %s', promotions)
+        self.logger.debug('Start date: %s', start_date.strftime('%Y-%m-%d'))
+        self.logger.debug('End date: %s', end_date.strftime('%Y-%m-%d'))
+        for promo in promotions:
+            cursor.execute(update_sql, [start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), promo])
+            connection.commit()
+
+    def save_coupon(self, promotion, coupon):
         coupon_filename = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.validation'))
         coupon_file = open(path.abspath(coupon_filename), 'w+')
-        self.logger.info('Save coupon %s', coupon)
-        coupon_file.write(str(coupon))
+        self.logger.debug('Saving %s coupon %s ', promotion, coupon)
+        coupon_info = dumps(dict(promotion=promotion, coupon=coupon), default=lambda c: c.__dict__)
+        coupon_file.write(str(coupon_info))
 
     def cancel_coupon(self):
         coupon_filename = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.validation'))

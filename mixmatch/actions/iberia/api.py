@@ -1,15 +1,15 @@
 from datetime import datetime
+from json import dumps
 from logging import getLogger
 from re import search, split
-from json import loads, dumps
 
 from lxml import etree
 from requests import Session
 from zeep import Client
 from zeep import Plugin
 from zeep.cache import InMemoryCache
-from zeep.transports import Transport
 from zeep.exceptions import TransportError
+from zeep.transports import Transport
 
 from .exceptions import VoucherAvailabilityRequestError, AuthenticationError
 
@@ -106,11 +106,11 @@ class RestClient(object):
 
     def __check_type(self, barcode):
         """ Given a barcode tries to find out what type of document has been scanned"""
-        return {'data': self.__get_voucher_id(barcode), 'type': 'BON'} if self.__is_voucher(barcode) else {
+        return {'data': type(self).__get_voucher_id(barcode), 'type': 'BON'} if type(self).__is_voucher(barcode) else {
             'data': barcode, 'type': 'TKT'}
 
     def is_voucher(self, scanned_string):
-        return self.__is_voucher(scanned_string)
+        return type(self).__is_voucher(scanned_string)
 
     @staticmethod
     def __to_coupons(translation, provided_list):
@@ -125,7 +125,7 @@ class RestClient(object):
         body.update({
             'airport': self.airport,
             'idProvider': self.id_provider,
-            'csdate': '20180322 12:00'  # datetime.now().strftime('%Y%m%d %H:%M')
+            'csdate': datetime.now().strftime('%Y%m%d %H:%M')
         })
         response = self.__client.service.GetVoucherAvailability(**body)
         if response.code == 'OK':
