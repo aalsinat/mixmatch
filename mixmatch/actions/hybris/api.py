@@ -2,9 +2,10 @@ from json import loads, dumps
 
 from urllib3 import PoolManager
 
+from .exceptions import InvalidQR
+
 
 class Coupon(object):
-
     def __init__(self, iterable=(), **kwargs):
         self.selected = False
         self.__dict__.update(iterable, **kwargs)
@@ -41,10 +42,10 @@ class RestClient(object):
         return getattr(self, item)
 
     @staticmethod
-    def _create_headers(content_type, token):
+    def _create_headers(content_type, token, accept=None):
         headers = {
             'Content-Type': content_type,
-            'Accept': content_type,
+            'Accept': accept if accept is not None else content_type,
             'Authorization': 'Bearer {}'.format(token)
         }
         return headers
@@ -53,7 +54,9 @@ class RestClient(object):
         body = {
             'grant_type': self.grant_type,
             'client_id': self.client_id,
-            'client_secret': self.client_secret
+            'client_secret': self.client_secret,
+            'username': self.username,
+            'password': self.password
         }
         token_response = self.http_client.request_encode_body(method='POST',
                                                               url=''.join([self.base_url,
@@ -67,23 +70,26 @@ class RestClient(object):
 
     def get_coupons(self, barcode):
         status, access_token = self._get_token()
-        if status == 200:
-            headers = self._create_headers('application/json', access_token)
+        if 200 <= status < 300:
+            headers = self._create_headers('application/x-www-form-urlencoded', access_token, 'application/json')
             data = {
-                'barcode': barcode,
-                'barcodeFormat': 'auto',
-                'locationRef': self.location,
-                'serviceProviderRef': self.service_provider,
-                'tradingOutletRef': self.trading_outlet
+                'qrCode': barcode,
+                'codTPV': self.codTPV
             }
-            encoded_data = dumps(data).encode('utf-8')
-            coupons_list = self.http_client.request('POST', ''.join(
-                [self.base_url, self.coupons_url]), body=encoded_data,
-                                                    headers=headers, timeout=3, retries=False)
-            if coupons_list.status == 200:
-                coupons = map(lambda c: Coupon(c), loads(coupons_list.data.decode('utf-8'))['coupons'])
+            #            encoded_data = dumps(data).encode('utf-8')
+            encoded_data = data
+            coupons_list = self.http_client.request_encode_body(method='POST',
+                                                                url=''.join([self.base_url,
+                                                                             self.coupons_url]),
+                                                                fields=encoded_data,
+                                                                headers=headers,
+                                                                encode_multipart=False, timeout=3, retries=False)
+
+            if 200 <= coupons_list.status < 300:
+                coupons = Coupon(
+                    loads(loads(coupons_list.data.decode('utf-8'))["message"].replace("'", "\"")))
                 return coupons_list.status, coupons
             else:
-                return coupons_list.status, loads(coupons_list.data.decode('utf-8'))['message']
+                raise InvalidQR(coupons_list.status, loads(coupons_list.data.decode('utf-8'))['message'])
         else:
             raise Exception('Authentication error %s: %s' % (status, access_token))

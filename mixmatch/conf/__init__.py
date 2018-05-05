@@ -1,13 +1,13 @@
-import os
 import sys
-from ConfigParser import SafeConfigParser
+from configparser import ConfigParser
+from os import path, environ
 
 from ..core.exceptions import ImproperlyConfigured
 from ..utils.functional import LazyObject, empty
 
 ENVIRONMENT_SETTINGS = "READER_SETTINGS"
-BASE_DIR = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(sys.argv[0]))
-# BASE_DIR = os.path.dirname(sys.executable)
+BASE_DIR = sys._MEIPASS if getattr(sys, 'frozen', False) else path.dirname(path.abspath(sys.argv[0]))
+# BASE_DIR = path.dirname(sys.executable)
 
 
 class LazySettings(LazyObject):
@@ -23,7 +23,7 @@ class LazySettings(LazyObject):
         is used the first time we need any settings at all, if the user has not
         previously configured the settings manually.
         """
-        settings_module = os.environ.get(ENVIRONMENT_SETTINGS)
+        settings_module = environ.get(ENVIRONMENT_SETTINGS)
         if not settings_module:
             desc = ("setting %s" % name) if name else "settings"
             raise ImproperlyConfigured(
@@ -52,6 +52,8 @@ class LazySettings(LazyObject):
         self.__dict__[name] = val
         return val
 
+    __getitem__ = __getattr__
+
     def __setattr__(self, name, value):
         """
         Set the value of setting. Clear all cached values if _wrapped changes
@@ -74,9 +76,9 @@ class LazySettings(LazyObject):
 class Settings(object):
     def __init__(self, settings_module):
         # update the dict from global settings
-        self.SETTINGS_MODULE = os.path.join(BASE_DIR, os.environ.get(ENVIRONMENT_SETTINGS))
+        self.SETTINGS_MODULE = path.join(BASE_DIR, environ.get(ENVIRONMENT_SETTINGS))
         # Load properties file
-        reader_config = SafeConfigParser()
+        reader_config = ConfigParser()
         reader_config.read(self.SETTINGS_MODULE)
         for section in reader_config.sections():
             setattr(self, section, dict(reader_config.items(section)))
@@ -90,4 +92,4 @@ class Settings(object):
 
 settings = LazySettings()
 
-__all__ = ['settings']
+__all__ = ['settings', 'BASE_DIR', 'ENVIRONMENT_SETTINGS']
