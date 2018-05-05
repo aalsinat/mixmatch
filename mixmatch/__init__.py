@@ -15,25 +15,22 @@ class Promotion(object):
 
     def __init__(self, promotions):
         self._actions = []
+        # Loads all
         self._load_actions(promotions['actions'].split(','))
         self.logger = getLogger(self.__class__.__module__)
 
     def _load_actions(self, actions_list):
         for action in actions_list:
-            action_module = import_module(''.join(['mixmatch.actions.', action]))
-            self._actions.append(action_module.Action(settings[action]))
+            action_module = import_module(''.join(['mixmatch.actions.', action.strip()]))
+            self._actions.append(action_module.Action(settings[action.strip()]))
 
     def apply(self, icg_extend):
         """
-        Esta metodo busca en la lista de acciones cargadas la que corresponda al identificador
-        que se pasa como parametro y ejecuta el metodo apply con el valor de lo que se ha leido
-        en el fichero de intercambio
+        This method searches in the list of loaded actions for the one corresponding to the pattern of the scanned
+        value, and executes the apply method with the same value as the parameter.
         """
         for action in self._actions:
-            if action.get_id() == icg_extend.get_promotion():
-                self.logger.info('Applying action %s', action.get_name())
-                action.apply(icg_extend)
-
+            action.apply(icg_extend)
 
 def apply(argv=None):
     """

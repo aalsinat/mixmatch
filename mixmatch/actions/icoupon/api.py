@@ -4,6 +4,7 @@ from urllib3 import PoolManager
 
 
 class Coupon(object):
+
     def __init__(self, iterable=(), **kwargs):
         self.selected = False
         self.__dict__.update(iterable, **kwargs)

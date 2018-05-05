@@ -91,6 +91,5 @@ class RestClient(object):
                 return coupons_list.status, coupons
             else:
                 raise InvalidQR(coupons_list.status, loads(coupons_list.data.decode('utf-8'))['message'])
-        #                return coupons_list.status, loads(coupons_list.data.decode('utf-8'))['message']
         else:
             raise Exception('Authentication error %s: %s' % (status, access_token))

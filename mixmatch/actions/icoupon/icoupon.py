@@ -5,8 +5,9 @@ from os import path
 
 import wx
 
-from mixmatch.actions import IApplicable
+from mixmatch.actions import IApplicable, PatternMatcher
 from mixmatch.conf import BASE_DIR
+from mixmatch.core.exceptions import DatabaseConnectionException
 from .api import RestClient, Coupon
 
 # Constants for returning status on view showing coupon list
@@ -17,62 +18,91 @@ ACTION_NAME = 'ICOUPON'
 
 
 class Action(IApplicable):
+    ACTION_NAME = 'ICOUPON'
+    promotion_pattern = r'^(.*)$'
+
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
-        self.current_coupons_list = self._retrieve_stored_info()
+        self.current_coupons_list = self.__retrieve_stored_info()
 
     def get_name(self):
-        return ACTION_NAME
+        return type(self).ACTION_NAME
+
+    def check_pattern(self, barcode: str, matcher: PatternMatcher):
+        return matcher.match(barcode, 0)
 
     def apply(self, icg_extend):
-        self.logger.info('Showing coupons list')
-        coupons_list = self._get_coupons(icg_extend.get_barcode())
-        # coupons_list = self._get_mocking_coupons()
+        # When scanned value does not match action pattern, do nothing.
+        if self.check_pattern(icg_extend.get_barcode(), PatternMatcher(self['mixmatch.pattern'])) is None:
+            self.logger.debug('Scanned value does not match %s pattern.', self.get_name())
+            return
 
-        if len(coupons_list) > 0:
-            self.logger.info('Coupons list length is %d', len(coupons_list))
+        try:
+            # Fetch for coupon list through API
+            coupons_list = self.__get_coupons(icg_extend.get_barcode())
+            # coupons_list = self.__get_mocking_coupons()
+
+            # When the coupon list is empty, do nothing.
+            if len(coupons_list) == 0:
+                self.logger.debug('Coupon list is empty. No coupons available to be redeemed.')
+                icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
+                return
+
+            # Show the list of coupons so that they can be selected
             app = wx.App()
             view = CouponsView(None, coupons_list, icg_extend)
             view.ShowFullScreen(True)
-            # view.Maximize(True)
             app.MainLoop()
+
+            if view.action == VIEW_EXIT:
+                return
+
+            if view.action == VIEW_CANCEL:
+                self.__cancel_mix_and_match('Cancelled redemption.')
+                return
+
             if view.action == VIEW_REDEEM:
-                # 1. Exchange file update, changing aplicarmm tag value with manager.promotion.id value
-                icg_extend.set_mix_and_match()
+                # Exchange file update
+                icg_extend.set_mix_and_match(promotion_id=self['mixmatch.id'])
                 icg_extend.set_mix_and_match_status('Coupons selected successfully')
-                # 2. Create a new file for saving selected coupons merged with previous stored ones.
-                selected_list = self._merge_coupon_lists(view.coupons, self.current_coupons_list)
-                if len(selected_list) > 0:
-                    self.logger.info('New selected list: %s', selected_list)
-                    icg_extend.save_coupon(selected_list)
-                    # 3. Update database
-                    value = sum(coupon.value for coupon in selected_list)
-                    self.logger.info('New value for coupons list %s', value)
-                    icg_extend.update_db_promotion(value)
-                else:
-                    icg_extend.cancel_mix_and_match()
-                    icg_extend.update_db_promotion(0.0)
-                    icg_extend.cancel_coupon()
-                    icg_extend.set_mix_and_match_status('No coupons selected for redemption.')
-            elif view.action == VIEW_CANCEL:
-                icg_extend.cancel_mix_and_match()
-                icg_extend.update_db_promotion(0.0)
-                icg_extend.cancel_coupon()
-                icg_extend.set_mix_and_match_status('Cancelled redemption.')
-            else:
-                self.logger.info('Nothing has been done')
-            self.logger.info('Returned list from Screen: %s', view.coupons)
-        else:
-            icg_extend.set_mix_and_match_status('There are no coupons up to date to be redeemed.')
+
+                # Update current selected coupon list with new values
+                selected_list = self.__merge_coupon_lists(view.coupons, self.current_coupons_list)
+                if len(selected_list) == 0:
+                    self.__cancel_mix_and_match(icg_extend, 'No coupons selected for redemption.')
+                    return
+
+                # Create a new file for saving selected coupons merged with previous stored ones
+                self.logger.debug('New selected coupons list: %s', selected_list)
+                icg_extend.save_coupon(self.get_name(), selected_list)
+
+                # Update database promotion value
+                value = sum(coupon.value for coupon in selected_list)
+                self.logger.debug('New value for coupons list %s', value)
+                icg_extend.update_db_promotion(value)
+
+            self.logger.debug('Returned list from selection screen: %s', view.coupons)
+
+        except DatabaseConnectionException as e:
+            self.logger.error(e.message)
+        except Exception as e:
+            self.logger.error(e)
 
     @staticmethod
-    def _mark_as_selected(selected_list, coupon):
+    def __cancel_mix_and_match(icg_extend, message):
+        icg_extend.cancel_mix_and_match()
+        icg_extend.update_db_promotion(0.0)
+        icg_extend.cancel_coupon()
+        icg_extend.set_mix_and_match_status(message)
+
+    @staticmethod
+    def __mark_as_selected(selected_list, coupon):
         if coupon in selected_list:
             coupon.selected = True
         return coupon
 
     @staticmethod
-    def _merge_coupon_lists(final_list, stored_list):
+    def __merge_coupon_lists(final_list, stored_list):
         current_list = stored_list[:]
         for coupon in final_list:
             if coupon in stored_list and not coupon.selected:
@@ -81,7 +111,7 @@ class Action(IApplicable):
                 current_list.append(coupon)
         return current_list
 
-    def _get_client(self):
+    def __get_client(self):
         return RestClient({
             'grant_type': self['token.grant_type'],
             'client_id': self['token.client_id'],
@@ -94,25 +124,25 @@ class Action(IApplicable):
             'trading_outlet': self['trading.outlet.ref']
         })
 
-    def _retrieve_stored_info(self):
+    def __retrieve_stored_info(self):
         saved_coupons_file = path.abspath(
             path.join(BASE_DIR, self['store.path'], self['store.filename']))
         if path.isfile(saved_coupons_file):
             file = open(saved_coupons_file, 'r')
             saved_coupons = file.read()
             file.close()
-            return list(map(lambda c: Coupon(c), loads(saved_coupons)))
+            return list(map(lambda c: Coupon(c), loads(saved_coupons)['coupon']))
         else:
             return []
 
-    def _get_coupons(self, barcode):
+    def __get_coupons(self, barcode):
         valid_coupons = []
         try:
-            selected_coupons = self._retrieve_stored_info()
-            status, requested_coupons = self._get_client().get_coupons(barcode)
+            selected_coupons = self.__retrieve_stored_info()
+            status, requested_coupons = self.__get_client().get_coupons(barcode)
             if status == 200:
                 actual_coupons = list(
-                    map(lambda coupon: self._mark_as_selected(selected_coupons, coupon), requested_coupons))
+                    map(lambda coupon: self.__mark_as_selected(selected_coupons, coupon), requested_coupons))
                 valid_coupons = list(
                     filter(lambda coupon: not coupon['redeemed'] and not coupon['expired'], actual_coupons))
         except Exception as e:
@@ -120,9 +150,9 @@ class Action(IApplicable):
         finally:
             return valid_coupons
 
-    def _get_mocking_coupons(self):
+    def __get_mocking_coupons(self):
         requested_coupons = []
-        selected_coupons = self._retrieve_stored_info()
+        selected_coupons = self.__retrieve_stored_info()
         saved_coupons_file = path.abspath(
             path.join(BASE_DIR, './mixmatch/actions/icoupon/mocking', 'icoupon_response.json'))
         if path.isfile(saved_coupons_file):
@@ -130,7 +160,7 @@ class Action(IApplicable):
                 saved_coupons = f.read()
                 f.close()
                 requested_coupons = list(map(lambda c: Coupon(c), loads(saved_coupons)))
-        actual_coupons = list(map(lambda coupon: self._mark_as_selected(selected_coupons, coupon), requested_coupons))
+        actual_coupons = list(map(lambda coupon: self.__mark_as_selected(selected_coupons, coupon), requested_coupons))
         valid_coupons = list(filter(lambda coupon: not coupon['redeemed'] and not coupon['expired'], actual_coupons))
         return valid_coupons
 
@@ -284,7 +314,6 @@ class CouponsView(wx.Frame):
         :return:
         """
         self.action = VIEW_REDEEM
-
         self.logger.info('Leaving coupons list view with %s', self.action)
         self.Close()
 
