@@ -1,10 +1,11 @@
+from datetime import datetime, timedelta
+from json import dumps
 from logging import getLogger
 from os import path, remove
 from xml.etree import ElementTree
 
-from datetime import datetime, timedelta
 from pypyodbc import connect
-from json import dumps
+
 from mixmatch.core.exceptions import DatabaseConnectionException
 
 
@@ -51,16 +52,10 @@ class ICGExtend(object):
         else:
             return
 
-    def set_mix_and_match(self):
+    def set_mix_and_match(self, promotion_id=None):
         icg_file = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         mix_and_match = self.root.find('aplicarmm')
-        mix_and_match.text = self.properties.get('manager.promotion.id')
-        self.element_tree.write(path.abspath(icg_file))
-
-    def set_mix_and_match_value(self, value):
-        icg_file = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
-        mix_and_match = self.root.find('aplicarmm')
-        mix_and_match.text = value
+        mix_and_match.text = self.properties.get('manager.promotion.id') if promotion_id is None else promotion_id
         self.element_tree.write(path.abspath(icg_file))
 
     def cancel_mix_and_match(self):
@@ -75,11 +70,12 @@ class ICGExtend(object):
         mix_and_match.text = message
         self.element_tree.write(path.abspath(icg_file))
 
-    def update_db_promotion(self, new_value):
+    def update_db_promotion(self, new_value, promotion_id=None):
         select_sql = r'SELECT VALOR FROM ACCIONESPROMOCION WHERE IDPROMOCION = ?'
         connection = self.connect()
         cursor = connection.cursor()
-        cursor.execute(select_sql, [self.properties.get('manager.promotion.id')])
+        promotion = self.properties.get('manager.promotion.id') if promotion_id is None else promotion_id
+        cursor.execute(select_sql, [promotion])
         results = cursor.fetchone()
         self.logger.debug('Original results %s', results)
         values = results[0].split('|')
@@ -96,7 +92,7 @@ class ICGExtend(object):
     def activate_mix_and_match(self, promotions: list):
         """
         Updates validity dates of the promotion so that it can be applied.
-        :param mm_id: Promotion identifier
+        :param promotions: List of promotions to be activated
         """
         self.logger.debug('Activating M&M with code %s', promotions)
         connection = self.connect()

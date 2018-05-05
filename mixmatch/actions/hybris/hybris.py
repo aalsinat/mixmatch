@@ -1,5 +1,3 @@
-from json import dumps
-
 from urllib3.exceptions import ConnectTimeoutError
 
 from mixmatch.actions import IApplicable, PatternMatcher
@@ -23,15 +21,18 @@ class Action(IApplicable):
     def get_name(self):
         return type(self).ACTION_NAME
 
-    def __get_promotions(self, raw_promotions):
+    @staticmethod
+    def __get_promotions(raw_promotions):
         promos_list = raw_promotions.split('|')
         promos = {k: v for k, v in (promo.split(':') for promo in promos_list)}
         return promos
 
-    def __get_user(self, barcode, matcher: PatternMatcher) -> str:
+    @staticmethod
+    def __get_user(barcode, matcher: PatternMatcher) -> str:
         return matcher.match(barcode, 4)[0]
 
-    def __get_promotion_name(self, barcode: str, matcher: PatternMatcher) -> str:
+    @staticmethod
+    def __get_promotion_name(barcode: str, matcher: PatternMatcher) -> str:
         return matcher.match(barcode, 5)[0][1:]
 
     def check_pattern(self, barcode: str, matcher: PatternMatcher) -> tuple:
@@ -39,33 +40,34 @@ class Action(IApplicable):
 
     def apply(self, icg_extend):
         matcher = PatternMatcher(self['mixmatch.pattern'])
-        if self.check_pattern(icg_extend.get_barcode(), matcher) is not None:
-            self.logger.info('Applying %s action', self.get_name())
-            try:
-                coupons_list = self.__get_coupons(icg_extend.get_barcode())
-                mix_and_match_status = '%s' % (
-                    ','.join(map(lambda p: p['name'], coupons_list.pos)))
-                icg_extend.set_mix_and_match_status(mix_and_match_status)
-                self.activate_mix_match(icg_extend, coupons_list.promos)
-                icg_extend.save_coupon(self.get_name(),
-                                       dict(user_id=self.__get_user(icg_extend.get_barcode(), matcher),
-                                            mm_code=coupons_list.promos,
-                                            mm_name=self.__get_promotion_name(icg_extend.get_barcode(), matcher)))
-            except InvalidQR as e:
-                self.logger.error('An InvalidQR validation %d - %s', e.status, e.message)
-                icg_extend.set_mix_and_match_status(e.message)
-                icg_extend.set_mix_and_match_value('0')
-            except ConnectTimeoutError as e:
-                self.logger.error('Timeout connection error: %s', e.args[1])
-                icg_extend.set_mix_and_match_status(e.args[1])
-                icg_extend.set_mix_and_match_value('0')
-            except Exception as e:
-                self.logger.error('An exception has occurred %s', e.args[1])
-        else:
+        if self.check_pattern(icg_extend.get_barcode(), matcher) is None:
             self.logger.debug('Scanned value does not match %s patterns.', self.get_name())
+            return
 
-    def activate_mix_match(self, icg_extend, promos):
-        icg_extend.set_mix_and_match_value(promos[-1])
+        self.logger.info('Applying %s action', self.get_name())
+        try:
+            coupons_list = self.__get_coupons(icg_extend.get_barcode())
+            mix_and_match_status = '%s' % (','.join(map(lambda p: p['name'], coupons_list.pos)))
+            icg_extend.set_mix_and_match_status(mix_and_match_status)
+            self.activate_mix_match(icg_extend, coupons_list.promos)
+            icg_extend.save_coupon(self.get_name(),
+                                   dict(user_id=self.__get_user(icg_extend.get_barcode(), matcher),
+                                        mm_code=coupons_list.promos,
+                                        mm_name=self.__get_promotion_name(icg_extend.get_barcode(), matcher)))
+        except InvalidQR as e:
+            self.logger.error('An InvalidQR validation %d - %s', e.status, e.message)
+            icg_extend.set_mix_and_match_status(e.message)
+            icg_extend.cancel_mix_and_match()
+        except ConnectTimeoutError as e:
+            self.logger.error('Timeout connection error: %s', e.args[1])
+            icg_extend.set_mix_and_match_status(e.args[1])
+            icg_extend.cancel_mix_and_match()
+        except Exception as e:
+            self.logger.error('An exception has occurred %s', e)
+
+    @staticmethod
+    def activate_mix_match(icg_extend, promos):
+        icg_extend.set_mix_and_match(promos[-1])
         icg_extend.activate_mix_and_match(promos)
 
     def __get_client(self):
