@@ -5,4 +5,5 @@ import mixmatch
 
 if __name__ == '__main__':
     environ.setdefault('READER_SETTINGS', 'properties.ini')
-    mixmatch.apply(argv)
+    # mixmatch.apply(argv)
+    mixmatch.start()

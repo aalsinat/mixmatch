@@ -24,6 +24,9 @@ class ICGExtend(object):
         else:
             raise Exception('ICG Exchange file %s does not exist' % icg_file)
 
+    def reload_file(self):
+        self.__read_file__()
+
     def get_barcode(self):
         if self.root is not None:
             return self.root.find('identificador').text
@@ -74,8 +77,8 @@ class ICGExtend(object):
         select_sql = r'SELECT VALOR FROM ACCIONESPROMOCION WHERE IDPROMOCION = ?'
         connection = self.connect()
         cursor = connection.cursor()
-        promotion = self.properties.get('manager.promotion.id') if promotion_id is None else promotion_id
-        cursor.execute(select_sql, [promotion])
+        id_promotion = self.properties.get('manager.promotion.id') if promotion_id is None else promotion_id
+        cursor.execute(select_sql, [id_promotion])
         results = cursor.fetchone()
         self.logger.debug('Original results %s', results)
         values = results[0].split('|')
@@ -86,7 +89,7 @@ class ICGExtend(object):
         promotion = '|'.join(str(value) for value in values)
         self.logger.info('New value to be updated %s', promotion)
         update_sql = 'UPDATE ACCIONESPROMOCION SET VALOR = ? WHERE IDPROMOCION = ?'
-        cursor.execute(update_sql, [promotion, self.properties.get('manager.promotion.id')])
+        cursor.execute(update_sql, [promotion, id_promotion])
         connection.commit()
 
     def activate_mix_and_match(self, promotions: list):
