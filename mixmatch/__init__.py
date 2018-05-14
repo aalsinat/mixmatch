@@ -31,22 +31,26 @@ class Promotion(object):
         message = data.decode()
         addr = writer.get_extra_info('peername')
         self.logger.debug('Received %r from %r' % (message, addr))
-        icg = ICGExtend(settings.icg.items())
-        self.apply(self.pos_api)
-        if len(message) > 1:
-            self.logger.debug('Send: %r' % message)
-            writer.write(data)
-            await writer.drain()
-            self.logger.debug('Close the client socket')
+        try:
+            self.apply(self.pos_api)
+            if len(message) > 1:
+                self.logger.debug('Send: %r' % message)
+                writer.write(data)
+                await writer.drain()
+                self.logger.debug('Close the client socket')
+                writer.close()
+        except Exception as e:
+            self.logger.error('Error handling request: %s', e)
             writer.close()
 
     def serve(self):
+        self.logger.debug('Start serving requests....')
         loop = asyncio.get_event_loop()
-        coroutine = asyncio.start_server(self.__handle_request, '127.0.0.1', 8888, loop=loop)
+        coroutine = asyncio.start_server(self.__handle_request, settings.service['host'], int(settings.service['port']), loop=loop)
         server = loop.run_until_complete(coroutine)
 
         # Serve requests until Ctrl+C is pressed
-        print('Serving on {}'.format(server.sockets[0].getsockname()))
+        self.logger.info('Serving on {}'.format(server.sockets[0].getsockname()))
         try:
             loop.run_forever()
         except KeyboardInterrupt:
@@ -63,6 +67,7 @@ class Promotion(object):
         value, and executes the apply method with the same value as the parameter.
         """
         icg_extend.reload_file()
+        self.logger.debug('Scanned value: %s', icg_extend.get_barcode())
         for action in self._actions:
             action.apply(icg_extend)
 

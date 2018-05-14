@@ -81,8 +81,6 @@ class Action(IApplicable):
                 self.logger.debug('New value for coupons list %s', value)
                 icg_extend.update_db_promotion(value)
 
-            self.logger.debug('Returned list from selection screen: %s', view.coupons)
-
         except DatabaseConnectionException as e:
             self.logger.error(e.message)
         except Exception as e:
@@ -167,7 +165,7 @@ class Action(IApplicable):
 
 class CouponsView(wx.Frame):
     def __init__(self, parent, coupons, icg_extend):
-        self.logger = getLogger(self.__class__.__name__)
+        self.logger = getLogger(self.__module__)
         self.coupons = coupons
         self.action = VIEW_EXIT
         self.extend = icg_extend
@@ -305,7 +303,6 @@ class CouponsView(wx.Frame):
         for coupon in self.coupons:
             if coupon.couponRef == btn.GetName():
                 coupon.selected = btn.GetValue()
-                self.logger.info('Change value for button %s to %s', btn.GetName(), btn.GetValue())
 
     def redeem(self, event):
         """
@@ -314,7 +311,7 @@ class CouponsView(wx.Frame):
         :return:
         """
         self.action = VIEW_REDEEM
-        self.logger.info('Leaving coupons list view with %s', self.action)
+        self.logger.debug('Leaving coupons list view with %s', self.action)
         self.Close()
 
     def cancel(self, event):
@@ -322,7 +319,7 @@ class CouponsView(wx.Frame):
         Cancelling redemption involves modifying ICG exchange file update and deleting any coupon reference file for further post-ticket processing.
         """
         self.action = VIEW_CANCEL
-        self.logger.info('Leaving coupons list view with %s', self.action)
+        self.logger.debug('Leaving coupons list view with %s', self.action)
         self.Close()
 
     def exit(self, event):
@@ -330,7 +327,7 @@ class CouponsView(wx.Frame):
         Exiting coupons list redemption screen without doing anything.
         """
         self.action = VIEW_EXIT
-        self.logger.info('Leaving coupons list view with %s', self.action)
+        self.logger.debug('Leaving coupons list view with %s', self.action)
         self.Close()
 
     @staticmethod
@@ -339,8 +336,6 @@ class CouponsView(wx.Frame):
         if hasattr(sys, '_MEIPASS'):
             return path.join(sys._MEIPASS, relative_path)
         temp = path.join(path.abspath("."), relative_path)
-        print('Relative path: %s' % relative_path)
-        print('Resource path for wxPython: %s' % temp)
         return temp
         # return path.join(path.abspath("."), relative_path)
 

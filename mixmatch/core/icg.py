@@ -14,7 +14,7 @@ class ICGExtend(object):
         self.logger = getLogger(self.__class__.__module__)
         self.values = list(constructor)
         self.properties = dict(self.values)
-        self.__read_file__()
+        # self.__read_file__()
 
     def __read_file__(self):
         icg_file = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
