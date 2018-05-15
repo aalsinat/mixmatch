@@ -23,9 +23,16 @@ class Action(IApplicable):
 
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
+        self.promotions = self.__get_promotions(self['mixmatch.promotions'])
 
     def get_name(self):
         return type(self).ACTION_NAME
+
+    @staticmethod
+    def __get_promotions(raw_promotions):
+        promos_list = raw_promotions.split('|')
+        promos = {k: v.split('#') for k, v in (promo.split(':') for promo in promos_list)}
+        return promos
 
     def __get_client(self):
         return RestClient({
@@ -77,9 +84,11 @@ class Action(IApplicable):
 
             # When the scanned value corresponds to a voucher, the value returned will be only one.
             if self.__is_voucher(icg_extend.get_barcode()):
+                # TODO: Check if coupon list is actually a list or a single entity. After that use service id or name.
+                # We should check what mixmatch code is related to voucher service
                 icg_extend.set_mix_and_match()
                 icg_extend.set_mix_and_match_status('Coupons selected successfully')
-                icg_extend.save_coupon(self.get_name(), coupons_list)
+                icg_extend.save_coupon(self.get_name(), coupons_list, validation_file=self['store.filename'])
                 return
 
             # Show the list of coupons so that they can be selected
@@ -110,7 +119,9 @@ class Action(IApplicable):
 
                 # Create a new file for saving selected coupons merged with previous stored ones
                 self.logger.debug('New selected coupons list: %s', selected_list)
-                icg_extend.save_coupon(self.get_name(), selected_list)
+                # TODO: Check if selected list is actually a list or a single entity. After that use service id or name.
+                # We should check what mixmatch code is related to voucher service
+                icg_extend.save_coupon(self.get_name(), selected_list, self['store.filename'])
 
             self.logger.debug('Returned list from selection screen: %s', view.coupons)
         except AuthenticationError as auth:
@@ -128,7 +139,6 @@ class Action(IApplicable):
 
 
 # TODO: En el constructor debemos incorporar un parametro para decidir si se puede seleccionar uno o multiples cupones
-
 class CouponsView(wx.Frame):
     def __init__(self, parent, coupons, icg_extend):
         self.logger = getLogger(self.__class__.__name__)

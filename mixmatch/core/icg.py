@@ -16,16 +16,17 @@ class ICGExtend(object):
         self.properties = dict(self.values)
         # self.__read_file__()
 
-    def __read_file__(self):
+    def __read_file(self):
         icg_file = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.filename'))
         if path.isfile(icg_file):
             self.element_tree = ElementTree.parse(path.abspath(icg_file))
             self.root = self.element_tree.getroot()
         else:
+            self.logger.error('ICG Exchange file %s does not exist', icg_file)
             raise Exception('ICG Exchange file %s does not exist' % icg_file)
 
     def reload_file(self):
-        self.__read_file__()
+        self.__read_file()
 
     def get_barcode(self):
         if self.root is not None:
@@ -111,8 +112,10 @@ class ICGExtend(object):
             cursor.execute(update_sql, [start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), promo])
             connection.commit()
 
-    def save_coupon(self, promotion, coupon):
-        coupon_filename = path.join(self.properties.get('exchange.path'), self.properties.get('exchange.validation'))
+    def save_coupon(self, promotion, coupon, validation_file=None):
+        coupon_filename = path.join(self.properties.get('exchange.path'),
+                                    self.properties.get(
+                                        'exchange.validation')) if validation_file is None else validation_file
         coupon_file = open(path.abspath(coupon_filename), 'w+')
         self.logger.debug('Saving %s coupon %s ', promotion, coupon)
         coupon_info = dumps(dict(promotion=promotion, coupon=coupon), default=lambda c: c.__dict__)

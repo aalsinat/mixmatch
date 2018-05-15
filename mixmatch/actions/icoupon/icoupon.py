@@ -23,7 +23,7 @@ class Action(IApplicable):
 
     def __init__(self, iterable=(), **properties):
         super(Action, self).__init__(iterable, **properties)
-        self.current_coupons_list = self.__retrieve_stored_info()
+        self.current_coupons_list = None  # self.__retrieve_stored_info()
 
     def get_name(self):
         return type(self).ACTION_NAME
@@ -74,7 +74,7 @@ class Action(IApplicable):
 
                 # Create a new file for saving selected coupons merged with previous stored ones
                 self.logger.debug('New selected coupons list: %s', selected_list)
-                icg_extend.save_coupon(self.get_name(), selected_list)
+                icg_extend.save_coupon(self.get_name(), selected_list, validation_file=self['store.filename'])
 
                 # Update database promotion value
                 value = sum(coupon.value for coupon in selected_list)

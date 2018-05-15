@@ -53,7 +53,8 @@ class Action(IApplicable):
             icg_extend.save_coupon(self.get_name(),
                                    dict(user_id=self.__get_user(icg_extend.get_barcode(), matcher),
                                         mm_code=coupons_list.promos,
-                                        mm_name=self.__get_promotion_name(icg_extend.get_barcode(), matcher)))
+                                        mm_name=self.__get_promotion_name(icg_extend.get_barcode(), matcher)),
+                                   validation_file=self['store.filename'])
         except InvalidQR as e:
             self.logger.error('An InvalidQR validation %d - %s', e.status, e.message)
             icg_extend.set_mix_and_match_status(e.message)

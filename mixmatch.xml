@@ -1,13 +1,14 @@
 <validarmixmatch>
-   <bd>
-      <server>.</server>
-      <database>DBFREST2</database>
-      <user>ICGAdmin</user>
-      <CodTPV>TPV30522</CodTPV>
-   </bd>
-   <codvendedor>76</codvendedor>
-   <idpromocion>3105</idpromocion>
-   <identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXALCLAXTA 1234 122YXXXX0010 X00</identificador>
-   <aplicarmm>3105</aplicarmm>
-   <estadomm>Coupons selected successfully</estadomm>
+    <bd>
+        <server>.</server>
+        <database>DBFREST2</database>
+        <user>ICGAdmin</user>
+        <CodTPV>TPV30522</CodTPV>
+    </bd>
+    <codvendedor>76</codvendedor>
+    <idpromocion>3105</idpromocion>
+    <!--<identificador>M1XXXXXXXXXXXXXXXXXXXXEXXXXXXXALCLAXTA 1234 122YXXXX0010 X00</identificador>-->
+    <identificador>cvou:0002001479045e</identificador>
+    <aplicarmm>3105</aplicarmm>
+    <estadomm>Coupons selected successfully</estadomm>
 </validarmixmatch>
